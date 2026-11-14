@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
-import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, User, UserPlus, Users, X} from "lucide-react";
+import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, User, UserCheck, UserPlus, Users, X} from "lucide-react";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import {apiFetch, lerErro} from "../../services/api";
 import styles from "./Administrador.module.css";
@@ -309,6 +309,9 @@ function Usuarios() {
         {valor: contar("ADMINISTRADOR"), rotulo: "Administradores", icone: <ShieldCheck size={22}/>, cor: styles.corCoral},
     ];
 
+    const pendentes = usuarios.filter((u) => u.statusCadastro === "PENDENTE").length;
+    const vendoConcessoes = perfil === FILTRO_SOLICITACOES;
+
     function filtrar(acao: () => void) {
         acao();
         setPagina(0);
@@ -322,9 +325,25 @@ function Usuarios() {
                     <h1 className={styles.title}>Gestão de usuários</h1>
                     <p className={styles.subtitle}>Contas e perfis dos usuários do MenteUp.</p>
                 </div>
-                <button type="button" className={styles.primaryButton} onClick={() => setNovoAberto(true)}>
-                    <UserPlus size={18}/> Novo usuário
-                </button>
+                <div className={styles.headerActions}>
+                    <button
+                        type="button"
+                        className={`${styles.ghostButton} ${styles.botaoConcessoes} ${vendoConcessoes ? styles.botaoConcessoesAtivo : ""}`}
+                        aria-pressed={vendoConcessoes}
+                        onClick={() => filtrar(() => setPerfil(vendoConcessoes ? "" : FILTRO_SOLICITACOES))}
+                    >
+                        <UserCheck size={18}/> Concessões pendentes
+                        {/* /// Some quando não houver mais pedidos para responder */}
+                        {pendentes > 0 && (
+                            <span className={styles.notificacao} aria-label={`${pendentes} pendentes`}>
+                                {pendentes > 99 ? "99+" : pendentes}
+                            </span>
+                        )}
+                    </button>
+                    <button type="button" className={styles.primaryButton} onClick={() => setNovoAberto(true)}>
+                        <UserPlus size={18}/> Novo usuário
+                    </button>
+                </div>
             </header>
 
             {aviso && <div className={styles.sucesso} role="status">{aviso}</div>}
@@ -341,7 +360,7 @@ function Usuarios() {
                 ))}
             </div>
 
-            <h2 className={styles.sectionTitle}>Todos os usuários</h2>
+            <h2 className={styles.sectionTitle}>{vendoConcessoes ? "Concessões pendentes" : "Todos os usuários"}</h2>
 
             <div className={styles.userFilters}>
                 <label className={`${styles.search} ${styles.searchWide}`}>
