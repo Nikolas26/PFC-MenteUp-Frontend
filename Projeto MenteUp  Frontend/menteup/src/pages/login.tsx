@@ -24,6 +24,7 @@ function Login() {
     const [email, setEmail] = useState(vindoDoCadastro?.email ?? "");
     const [senha, setSenha] = useState("");
     const [erro, setErro] = useState("");
+    const [codigoErro, setCodigoErro] = useState("");
 
     const [carregando, setCarregando] = useState(false);
     // Senhas erradas seguidas para o mesmo e-mail nesta tela (o backend bloqueia na 3ª)
@@ -33,6 +34,7 @@ function Login() {
         event.preventDefault();
 
         setErro("");
+        setCodigoErro("");
         setContaCriada(false);
 
         // Aceita o e-mail com espaços sobrando (copiado e colado, teclado do celular)
@@ -62,8 +64,11 @@ function Login() {
 
              if (!resposta.ok) {
                 // conta bloqueada depois de 3 senhas erradas
+                /// Também chega aqui o cadastro de professor pendente ou rejeitado
                 if (resposta.status === 403) {
-                    setErro((await lerErro(resposta, "Sua conta está bloqueada.")).mensagem);
+                    const falha = await lerErro(resposta, "Sua conta está bloqueada.");
+                    setCodigoErro(falha.codigo);
+                    setErro(falha.mensagem);
                 } else {
                     const total = falhas.email === emailLimpo ? falhas.total + 1 : 1;
                     setFalhas({ email: emailLimpo, total });
@@ -238,6 +243,18 @@ function Login() {
                             {erro && (
                                 <div className={styles.error} role="alert">
                                     {erro}
+                                    {codigoErro === "CADASTRO_REJEITADO" && (
+                                        <>
+                                            {" "}
+                                            <button
+                                                type="button"
+                                                className={styles.link}
+                                                onClick={() => navigate("/cadastro", { state: { perfil: "professor" } })}
+                                            >
+                                                Enviar nova solicitação
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
 

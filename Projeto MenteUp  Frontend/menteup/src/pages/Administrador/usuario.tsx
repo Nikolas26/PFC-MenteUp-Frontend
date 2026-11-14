@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
-import {ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, User, UserPlus, Users, X} from "lucide-react";
+import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, User, UserPlus, Users, X} from "lucide-react";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import {apiFetch, lerErro} from "../../services/api";
 import styles from "./Administrador.module.css";
@@ -9,12 +9,19 @@ const POR_PAGINA = 8;
 
 type Tipo = "ALUNO" | "PROFESSOR" | "ADMINISTRADOR";
 
+/// Ausente quando a conta já está liberada
+type StatusCadastro = "PENDENTE" | "APROVADA" | "REJEITADA";
+
+/// Valor do filtro de perfil que lista só as solicitações
+const FILTRO_SOLICITACOES = "SOLICITACOES";
+
 interface UsuarioApi {
     id: number;
     nomeUsuario: string;
     usuario: string;
     tipoUsuario?: string;
     aguardandoPrimeiroAcesso?: boolean;
+    statusCadastro?: StatusCadastro | null;
     avatar?: string | null;
     dataCadastro?: string;
     dataCriacao?: string;
@@ -39,6 +46,7 @@ interface Usuario {
     email: string;
     tipo: Tipo;
     pendente: boolean;
+    statusCadastro: StatusCadastro | null;
     cadastro: string | null;
     ultimoAcesso: string | null;
     turmas: string[];
@@ -50,6 +58,23 @@ const TIPO: Record<Tipo, { rotulo: string; classe: string; icone: typeof User }>
     PROFESSOR: {rotulo: "Professor", classe: styles.badgeMint, icone: GraduationCap},
     ADMINISTRADOR: {rotulo: "Administrador", classe: styles.badgeOuro, icone: ShieldCheck},
 };
+
+const STATUS: Record<StatusCadastro, { rotulo: string; situacao: string; classe: string }> = {
+    PENDENTE: {rotulo: "Pendente", situacao: "Solicitação aguardando análise", classe: styles.badgeOuro},
+    APROVADA: {rotulo: "Aprovado", situacao: "Solicitação aprovada", classe: styles.badgeMint},
+    REJEITADA: {rotulo: "Rejeitado", situacao: "Solicitação rejeitada", classe: styles.badgeCoral},
+};
+
+function BadgeStatus({status}: { status: StatusCadastro | null }) {
+    if (!status) return null;
+    const {rotulo, classe} = STATUS[status];
+    return <span className={`${styles.badge} ${classe}`}>{rotulo}</span>;
+}
+
+/// Professor pendente ou rejeitado ainda não tem acesso
+function liberado(u: Usuario) {
+    return u.statusCadastro !== "PENDENTE" && u.statusCadastro !== "REJEITADA";
+}
 
 function tipoDe(valor?: string): Tipo {
     const v = valor?.toUpperCase();
@@ -169,6 +194,41 @@ function Usuarios() {
     const [novoAberto, setNovoAberto] = useState(false);
     const [aviso, setAviso] = useState("");
     const [versao, setVersao] = useState(0);
+    const [respondendo, setRespondendo] = useState(false);
+    const [erroResposta, setErroResposta] = useState("");
+
+    function abrirDetalhe(u: Usuario | null) {
+        setErroResposta("");
+        setDetalhe(u);
+    }
+
+    async function responderSolicitacao(u: Usuario, acao: "aprovar" | "rejeitar") {
+        setErroResposta("");
+        try {
+            setRespondendo(true);
+            const resposta = await apiFetch(`/usuarios/${u.id}/${acao}`, {method: "PUT"});
+
+            if (!resposta.ok) {
+                const falha = await lerErro(resposta, "Não foi possível responder a solicitação.");
+                setErroResposta(falha.mensagem);
+                /// Outra aba ou outro clique já respondeu o pedido
+                if (falha.codigo === "PEDIDO_NAO_PENDENTE") setVersao((atual) => atual + 1);
+                return;
+            }
+
+            const atualizado: UsuarioApi = await resposta.json();
+            const linha = {...u, statusCadastro: atualizado.statusCadastro ?? null};
+            setUsuarios((lista) => lista.map((item) => (item.id === u.id ? linha : item)));
+            setDetalhe(null);
+            setAviso(acao === "aprovar"
+                ? `Cadastro de "${u.nome}" aprovado. A pessoa foi avisada por e-mail.`
+                : `Cadastro de "${u.nome}" rejeitado. A pessoa foi avisada por e-mail.`);
+        } catch {
+            setErroResposta("Não foi possível conectar ao servidor.");
+        } finally {
+            setRespondendo(false);
+        }
+    }
 
     useEffect(() => {
         async function carregar() {
@@ -198,6 +258,7 @@ function Usuarios() {
                     email: u.usuario,
                     tipo: tipoDe(u.tipoUsuario),
                     pendente: u.aguardandoPrimeiroAcesso === true,
+                    statusCadastro: u.statusCadastro ?? null,
                     cadastro: u.dataCadastro ?? u.dataCriacao ?? u.criadoEm ?? null,
                     ultimoAcesso: ultimo.get(u.id) ?? null,
                     avatar: u.avatar ?? null,
@@ -229,7 +290,8 @@ function Usuarios() {
         const termo = busca.trim().toLowerCase();
         return usuarios.filter((u) =>
             (!termo || u.nome.toLowerCase().includes(termo) || u.email.toLowerCase().includes(termo))
-            && (!perfil || u.tipo === perfil)
+            && (!perfil
+                || (perfil === FILTRO_SOLICITACOES ? u.statusCadastro === "PENDENTE" : u.tipo === perfil))
         );
     }, [usuarios, busca, perfil]);
 
@@ -239,7 +301,7 @@ function Usuarios() {
     const inicio = filtrados.length ? paginaAtual * POR_PAGINA + 1 : 0;
     const fim = paginaAtual * POR_PAGINA + visiveis.length;
 
-    const contar = (tipo: Tipo) => usuarios.filter((u) => u.tipo === tipo).length;
+    const contar = (tipo: Tipo) => usuarios.filter((u) => u.tipo === tipo && liberado(u)).length;
     const resumo = [
         {valor: usuarios.length, rotulo: "Usuários cadastrados", icone: <Users size={22}/>, cor: styles.corLilas},
         {valor: contar("ALUNO"), rotulo: "Alunos", icone: <User size={22}/>, cor: styles.corMint},
@@ -296,6 +358,7 @@ function Usuarios() {
                     <option value="ALUNO">Aluno</option>
                     <option value="PROFESSOR">Professor</option>
                     <option value="ADMINISTRADOR">Administrador</option>
+                    <option value={FILTRO_SOLICITACOES}>Solicitações pendentes</option>
                 </select>
             </div>
 
@@ -333,14 +396,14 @@ function Usuarios() {
                                         </span>
                                     </td>
                                     <td className={styles.muted}>{u.email}</td>
-                                    <td><BadgeTipo tipo={u.tipo}/></td>
+                                    <td><BadgeTipo tipo={u.tipo}/> <BadgeStatus status={u.statusCadastro}/></td>
                                     <td className={`${styles.muted} ${styles.nowrap}`}>{formatar(u.ultimoAcesso)}</td>
                                     <td>
                                         <button
                                             type="button"
                                             title="Mais informações"
                                             aria-label={`Mais informações sobre ${u.nome}`}
-                                            onClick={() => setDetalhe(u)}
+                                            onClick={() => abrirDetalhe(u)}
                                             className={styles.iconButton}
                                         >
                                             <Ellipsis size={18}/>
@@ -399,11 +462,38 @@ function Usuarios() {
                             <div><dt>Identificador</dt><dd>{identificador(detalhe.id)}</dd></div>
                             <div><dt>E-mail</dt><dd>{detalhe.email}</dd></div>
                             <div><dt>Tipo de usuário</dt><dd>{TIPO[detalhe.tipo].rotulo}</dd></div>
-                            <div><dt>Situação</dt><dd>{detalhe.pendente ? "Aguardando primeiro acesso (convite enviado)" : "Ativo"}</dd></div>
+                            <div><dt>Situação</dt><dd>{
+                                detalhe.statusCadastro && detalhe.statusCadastro !== "APROVADA"
+                                    ? STATUS[detalhe.statusCadastro].situacao
+                                    : detalhe.pendente ? "Aguardando primeiro acesso (convite enviado)" : "Ativo"
+                            }</dd></div>
                             <div><dt>Turmas</dt><dd>{detalhe.turmas.length ? detalhe.turmas.join(", ") : "—"}</dd></div>
                             <div><dt>Data de cadastro</dt><dd>{formatar(detalhe.cadastro, false)}</dd></div>
                             <div><dt>Último acesso</dt><dd>{formatar(detalhe.ultimoAcesso)}</dd></div>
                         </dl>
+                        {erroResposta && <div className={styles.error} role="alert">{erroResposta}</div>}
+                        {detalhe.statusCadastro === "PENDENTE" && (
+                            <div style={{display: "flex", gap: 10, marginBottom: 10}}>
+                                <button
+                                    type="button"
+                                    className={styles.primaryButton}
+                                    style={{flex: 1}}
+                                    disabled={respondendo}
+                                    onClick={() => responderSolicitacao(detalhe, "aprovar")}
+                                >
+                                    <Check size={18}/> Aprovar
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`${styles.closeButton} ${styles.badgeCoral}`}
+                                    style={{flex: 1}}
+                                    disabled={respondendo}
+                                    onClick={() => responderSolicitacao(detalhe, "rejeitar")}
+                                >
+                                    <X size={18}/> Rejeitar
+                                </button>
+                            </div>
+                        )}
                         <button type="button" className={styles.closeButton} onClick={() => setDetalhe(null)}>
                             Fechar
                         </button>

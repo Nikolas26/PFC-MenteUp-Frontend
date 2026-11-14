@@ -37,6 +37,8 @@ function Cadastro() {
     const [abriuPolitica, setAbriuPolitica] = useState(false);
     const leuDocumentos = abriuTermo && abriuPolitica;
     const [aceitou, setAceitou] = useState(false);
+    /// Professor fica aguardando a aprovação do administrador
+    const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false);
 
     async function handleCadastro(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -97,6 +99,12 @@ function Cadastro() {
                 return;
             }
 
+            const dados = await resposta.json().catch(() => null);
+            if (dados?.statusCadastro === "PENDENTE") {
+                setSolicitacaoEnviada(true);
+                return;
+            }
+
             // O cadastro não envia código: a pessoa entra pelo login (o código de 2 etapas chega ali)
             navigate("/login", { state: { contaCriada: true, email: email.trim() } });
         } catch (error) {
@@ -107,7 +115,7 @@ function Cadastro() {
         }
     }
 
-    const textoBotao = perfil === "ALUNO" ? "Criar conta de aluno" : "Criar conta de professor";
+    const textoBotao = perfil === "ALUNO" ? "Criar conta de aluno" : "Enviar solicitação";
 
     return (
         <div className={styles.page}>
@@ -170,6 +178,18 @@ function Cadastro() {
                             <p className={styles.cardSubtitle}>Escolha seu perfil para começar.</p>
                         </header>
 
+                        {solicitacaoEnviada ? (
+                            <div className={styles.form}>
+                                <div className={styles.success} role="status">
+                                    Solicitação enviada. Aguardando aprovação do seu cadastro. Você receberá um e-mail
+                                    quando o administrador analisar o seu pedido.
+                                </div>
+                                <button type="button" className={styles.primaryButton} onClick={() => navigate("/login")}>
+                                    Voltar para o login
+                                </button>
+                            </div>
+                        ) : (
+                        <>
                         <div className={styles.segmented} role="radiogroup" aria-label="Perfil da conta">
                             <button
                                 type="button"
@@ -310,9 +330,11 @@ function Cadastro() {
                             )}
 
                             <button type="submit" className={styles.primaryButton} disabled={carregando || !aceitou}>
-                                {carregando ? "Criando conta..." : textoBotao}
+                                {carregando ? (perfil === "ALUNO" ? "Criando conta..." : "Enviando solicitação...") : textoBotao}
                             </button>
                         </form>
+                        </>
+                        )}
 
                         <p className={styles.footer}>
                             Já possui uma conta?{" "}
