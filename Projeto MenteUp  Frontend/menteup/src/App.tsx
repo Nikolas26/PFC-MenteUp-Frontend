@@ -1,55 +1,48 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
-
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/login";
-import Cadastro from "./pages/cadastro";
-import EsqueciSenha from "./pages/EsqueciSenha";
-import RedefinirSenha from "./pages/RedefinirSenha";
-import PrimeiroAcesso from "./pages/PrimeiroAcesso";
-
-import DashboardAluno from "./pages/aluno/dashboardAluno";
-import AtividadesAluno from "./pages/aluno/atividadesAluno";
-import TurmasAluno from "./pages/aluno/turmasAluno";
-import Ranking from "./pages/aluno/Ranking";
-import Conquistas from "./pages/aluno/Conquistas";
-import ResponderAtividadesAluno from "./pages/aluno/ResponderAtividadeAluno";
-import DesafiosAluno from "./pages/Desafio/desafiosAluno.tsx";
-import JogarDesafio from "./pages/Desafio/JogarDesafio.tsx";
-
-import DashboardProfessor from "./pages/professor/dashboardProfessor.tsx";
-import AtividadesProfessor from "./pages/professor/atividadesProfessor";
-import VisualizarAtividadeProfessor from "./pages/professor/VisualizarAtividadeProfessor";
-import EditarAtividadeProfessor from "./pages/professor/EditarAtividadeProfessor";
-import CriarAtividadeProfessor from "./pages/professor/CriarAtividadeProfessor";
-
-import DashboardAdmin from "./pages/Administrador/DashboardAdministrador.tsx";
-import Usuarios from "./pages/Administrador/usuario";
-import VisualizarAtividadeAdministrador from "./pages/Administrador/VisualizarAtividadeAdministrador";
-import EditarAtividadeAdministrador from "./pages/Administrador/EditarAtividadeAdministrador";
-import CriarAtividadeAdministrador from "./pages/Administrador/CriarAtividadeAdministrador";
-import AtividadesAdministrador from "./pages/Administrador/AtividadesAdministrador";
-import LogsAdministrador from "./pages/Administrador/LogsAdministrador.tsx";
-
-import TurmasGestao from "./pages/Desafio/TurmasGestao.tsx";
-import DetalheTurma from "./pages/Desafio/DetalheTurma.tsx";
-import DesafiosGestao from "./pages/Desafio/DesafiosGestao.tsx";
-import CriarDesafio from "./pages/Desafio/CriarDesafio.tsx";
-import ConduzirDesafio from "./pages/Desafio/ConduzirDesafio.tsx";
-import DesempenhoAluno from "./pages/Desempenho/DesempenhoAluno.tsx";
-
 import PrivateRoute from "./routes/privateRoute";
-import Verificar2FA from "./pages/Verificar2FA.tsx";
-import { ouvirNotificacoesFCM } from "./firebase/fcmService";
-import TermoAceite from "./pages/TermoAceite";
-import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
-import NovoAceite from "./pages/NovoAceite";
-import MeusDados from "./pages/MeusDados";
 import Footer from "./Footer";
-import Desempenho from "./pages/Desempenho/Desempenho.tsx";
-import MeuPerfil from "./pages/Perfil/MeuPerfil.tsx";
 
-
-import { useEffect } from "react";
+/// Páginas carregadas sob demanda: o navegador só baixa o código de uma tela quando ela é aberta
+const Cadastro = lazy(() => import("./pages/cadastro"));
+const EsqueciSenha = lazy(() => import("./pages/EsqueciSenha"));
+const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
+const PrimeiroAcesso = lazy(() => import("./pages/PrimeiroAcesso"));
+const DashboardAluno = lazy(() => import("./pages/aluno/dashboardAluno"));
+const AtividadesAluno = lazy(() => import("./pages/aluno/atividadesAluno"));
+const TurmasAluno = lazy(() => import("./pages/aluno/turmasAluno"));
+const Ranking = lazy(() => import("./pages/aluno/Ranking"));
+const Conquistas = lazy(() => import("./pages/aluno/Conquistas"));
+const ResponderAtividadesAluno = lazy(() => import("./pages/aluno/ResponderAtividadeAluno"));
+const DesafiosAluno = lazy(() => import("./pages/Desafio/desafiosAluno.tsx"));
+const JogarDesafio = lazy(() => import("./pages/Desafio/JogarDesafio.tsx"));
+const DashboardProfessor = lazy(() => import("./pages/professor/dashboardProfessor.tsx"));
+const AtividadesProfessor = lazy(() => import("./pages/professor/atividadesProfessor"));
+const VisualizarAtividadeProfessor = lazy(() => import("./pages/professor/VisualizarAtividadeProfessor"));
+const EditarAtividadeProfessor = lazy(() => import("./pages/professor/EditarAtividadeProfessor"));
+const CriarAtividadeProfessor = lazy(() => import("./pages/professor/CriarAtividadeProfessor"));
+const DashboardAdmin = lazy(() => import("./pages/Administrador/DashboardAdministrador.tsx"));
+const Usuarios = lazy(() => import("./pages/Administrador/usuario"));
+const VisualizarAtividadeAdministrador = lazy(() => import("./pages/Administrador/VisualizarAtividadeAdministrador"));
+const EditarAtividadeAdministrador = lazy(() => import("./pages/Administrador/EditarAtividadeAdministrador"));
+const CriarAtividadeAdministrador = lazy(() => import("./pages/Administrador/CriarAtividadeAdministrador"));
+const AtividadesAdministrador = lazy(() => import("./pages/Administrador/AtividadesAdministrador"));
+const LogsAdministrador = lazy(() => import("./pages/Administrador/LogsAdministrador.tsx"));
+const TurmasGestao = lazy(() => import("./pages/Desafio/TurmasGestao.tsx"));
+const DetalheTurma = lazy(() => import("./pages/Desafio/DetalheTurma.tsx"));
+const DesafiosGestao = lazy(() => import("./pages/Desafio/DesafiosGestao.tsx"));
+const CriarDesafio = lazy(() => import("./pages/Desafio/CriarDesafio.tsx"));
+const ConduzirDesafio = lazy(() => import("./pages/Desafio/ConduzirDesafio.tsx"));
+const DesempenhoAluno = lazy(() => import("./pages/Desempenho/DesempenhoAluno.tsx"));
+const Verificar2FA = lazy(() => import("./pages/Verificar2FA.tsx"));
+const TermoAceite = lazy(() => import("./pages/TermoAceite"));
+const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
+const NovoAceite = lazy(() => import("./pages/NovoAceite"));
+const MeusDados = lazy(() => import("./pages/MeusDados"));
+const Desempenho = lazy(() => import("./pages/Desempenho/Desempenho.tsx"));
+const MeuPerfil = lazy(() => import("./pages/Perfil/MeuPerfil.tsx"));
 
 
 function App() {
@@ -77,16 +70,28 @@ function App() {
         };
 
     }, [navigate]);
-    useEffect(() => {
+    const location = useLocation();
+    const notificacoesAtivas = useRef(false);
 
-        ouvirNotificacoesFCM();
-    }, []);
+    /// O Firebase só é baixado e iniciado para quem já entrou; confere de novo a cada troca de tela
+    useEffect(() => {
+        if (notificacoesAtivas.current || !localStorage.getItem("token")) return;
+        notificacoesAtivas.current = true;
+
+        import("./firebase/fcmService")
+            .then(({ ouvirNotificacoesFCM }) => ouvirNotificacoesFCM())
+            .catch(() => {
+                notificacoesAtivas.current = false;
+            });
+    }, [location.pathname]);
 
     return (
         <div className="flex min-h-screen flex-col">
 
             <main className="flex-1">
 
+                {/* Cada página é baixada só quando é aberta pela primeira vez */}
+                <Suspense fallback={<CarregandoPagina />}>
                 <Routes>
 
                     {/* PÚBLICO */}
@@ -469,11 +474,21 @@ function App() {
 
 
                 </Routes>
+                </Suspense>
 
             </main>
 
             <Footer />
 
+        </div>
+    );
+}
+
+/// Aparece enquanto o arquivo da página está sendo baixado
+function CarregandoPagina() {
+    return (
+        <div className="flex min-h-[60vh] items-center justify-center" role="status" aria-live="polite">
+            <span style={{ color: "var(--mu-text-muted)" }}>Carregando...</span>
         </div>
     );
 }

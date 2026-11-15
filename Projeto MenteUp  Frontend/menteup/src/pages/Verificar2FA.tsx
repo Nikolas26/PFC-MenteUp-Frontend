@@ -8,7 +8,6 @@ import styles from "./login.module.css";
 const ESPERA_REENVIO_SEGUNDOS = 60;
 // Situações em que um novo código não resolve: a pessoa precisa entrar com a senha de novo
 const PRECISA_LOGIN = ["SEM_LOGIN_RECENTE", "LIMITE_REENVIO_2FA"];
-import { registrarTokenFCM } from "../firebase/fcmService";
 import { LogoMarca, LogoNome } from "../components/Logo";
 import { salvarLogin } from "../services/usuarioLogado";
 
@@ -106,7 +105,9 @@ function Verificar2FA() {
 
             /// As notificações do celular só são ativadas depois que os documentos estiverem aceitos
             if (destino !== "/novo-aceite") {
-                await registrarTokenFCM();
+                /// Em segundo plano: o pedido de permissão e o envio do token não seguram a entrada no painel
+                void import("../firebase/fcmService").then(({ registrarTokenFCM }) => registrarTokenFCM())
+                    .catch(() => undefined);
             }
 
             sessionStorage.removeItem("email2FA");
