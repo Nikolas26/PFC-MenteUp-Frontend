@@ -35,6 +35,13 @@ export async function apiFetch(
         throw new Error("Não autorizado");
     }
 
+    /// Saiu uma versão nova do Termo ou da Política: a pessoa precisa aceitar antes de continuar
+    if (resposta.status === 428 && window.location.pathname !== "/novo-aceite") {
+        window.location.href = "/novo-aceite";
+
+        throw new Error("Aceite pendente");
+    }
+
     return resposta;
 }
 
