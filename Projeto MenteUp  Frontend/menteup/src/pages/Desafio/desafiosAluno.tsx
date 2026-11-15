@@ -2,8 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Play, Trophy} from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {BadgeStatusDesafio, IconeDesafio} from "../../components/ComponentesDesafio";
 import {apiFetch} from "../../services/api";
+import {gravarCache, lerCache} from "../../services/cacheTelas";
 import {contagem, type Desafio, type StatusDesafio} from "../../services/turmaDesafio";
 import base from "./TurmasGestao.module.css";
 import styles from "./Desafios.module.css";
@@ -25,8 +28,8 @@ const ACAO_STATUS: Record<StatusDesafio, string> = {
 function DesafiosAluno() {
     const navigate = useNavigate();
 
-    const [desafios, setDesafios] = useState<Desafio[]>([]);
-    const [carregando, setCarregando] = useState(true);
+    const [desafios, setDesafios] = useState<Desafio[]>(() => lerCache<Desafio[]>("/desafios") ?? []);
+    const [carregando, setCarregando] = useState(() => lerCache("/desafios") === undefined);
     const [erro, setErro] = useState("");
 
     useEffect(() => {
@@ -34,7 +37,9 @@ function DesafiosAluno() {
             try {
                 const resposta = await apiFetch("/desafios");
                 if (!resposta.ok) throw new Error("Falha ao consultar os desafios.");
-                setDesafios(await resposta.json());
+                const dados: Desafio[] = await resposta.json();
+                setDesafios(dados);
+                gravarCache("/desafios", dados);
                 setErro("");
             } catch (error) {
                 console.error("Erro ao carregar desafios:", error);
@@ -51,6 +56,7 @@ function DesafiosAluno() {
     }, []);
 
     const ordenados = [...desafios].sort((a, b) => ORDEM_STATUS[a.status] - ORDEM_STATUS[b.status]);
+    const paginacao = usePaginacao(ordenados, 15);
 
     return (
         <AlunoLayout>
@@ -73,8 +79,9 @@ function DesafiosAluno() {
                     <p>Os desafios aparecem quando o professor adicionar você a uma turma.</p>
                 </div>
             ) : (
+                <>
                 <ul className={base.list}>
-                    {ordenados.map((desafio) => {
+                    {paginacao.visiveis.map((desafio) => {
                         const encerrado = desafio.status === "ENCERRADO";
                         const abrir = () => navigate(`/aluno/desafios/${desafio.id}`);
                         return (
@@ -106,6 +113,8 @@ function DesafiosAluno() {
                         );
                     })}
                 </ul>
+                <Paginacao {...paginacao} rotulo="desafios"/>
+                </>
             )}
         </AlunoLayout>
     );

@@ -8,6 +8,9 @@ import {
     type FiltrosPainel,
     type Painel,
 } from "../services/painel";
+import { gravarCache, lerCache } from "../services/cacheTelas";
+import Paginacao from "./Paginacao";
+import { usePaginacao } from "../hooks/usePaginacao";
 import styles from "./PainelIndicadores.module.css";
 
 /*
@@ -25,15 +28,21 @@ interface PainelIndicadoresProps {
 
 const numero = (valor: number) => valor.toLocaleString("pt-BR");
 
+/// Cada combinação de filtros é guardada separadamente
+const chavePainel = (f: FiltrosPainel) => `/dashboard/painel|${f.dias}|${f.turmaId}|${f.alunoId}`;
+const FILTROS_INICIAIS: FiltrosPainel = { dias: 30, turmaId: null, alunoId: null };
+
 function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicadoresProps) {
-    const [filtros, setFiltros] = useState<FiltrosPainel>({ dias: 30, turmaId: null, alunoId: null });
-    const [painel, setPainel] = useState<Painel | null>(null);
-    const [carregando, setCarregando] = useState(true);
+    const [filtros, setFiltros] = useState<FiltrosPainel>(FILTROS_INICIAIS);
+    const [painel, setPainel] = useState<Painel | null>(() => lerCache<Painel>(chavePainel(FILTROS_INICIAIS)) ?? null);
+    const [carregando, setCarregando] = useState(() => lerCache(chavePainel(FILTROS_INICIAIS)) === undefined);
     const [erro, setErro] = useState("");
 
-    // Trocar um filtro já mostra "carregando"; o efeito abaixo busca os dados novos
+    // Trocar um filtro já mostra "carregando" (ou o que estiver guardado); o efeito abaixo busca os dados novos
     function mudarFiltros(novos: FiltrosPainel) {
-        setCarregando(true);
+        const guardado = lerCache<Painel>(chavePainel(novos));
+        if (guardado) setPainel(guardado);
+        setCarregando(guardado === undefined);
         setErro("");
         setFiltros(novos);
     }
@@ -43,6 +52,7 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
 
         carregarPainel(filtros)
             .then((dados) => {
+                gravarCache(chavePainel(filtros), dados);
                 if (!ativo) return;
                 setPainel(dados);
                 aoCarregar?.(dados);
@@ -65,6 +75,11 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
     const resumo = painel?.resumo;
     const maiorDia = Math.max(1, ...(painel?.conclusoesPorDia.map((d) => d.concluidas) ?? [0]));
     const dias = painel?.conclusoesPorDia ?? [];
+
+    /// Trocar período, turma ou aluno volta para a primeira página
+    const chaveFiltros = `${filtros.dias}|${filtros.turmaId}|${filtros.alunoId}`;
+    const paginaTurmas = usePaginacao(painel?.acertoPorTurma ?? [], 10, chaveFiltros);
+    const paginaAlunos = usePaginacao(painel?.desempenhoAlunos ?? [], 20, chaveFiltros);
 
     const cards = resumo
         ? [
@@ -189,7 +204,7 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                     {painel.acertoPorTurma.length > 0 && (
                         <div className={styles.bloco}>
                             <h3 className={styles.blocoTitulo}>Acerto por turma</h3>
-                            {painel.acertoPorTurma.map((t) => (
+                            {paginaTurmas.visiveis.map((t) => (
                                 <div key={t.turma} className={styles.linhaTurma}>
                                     <span>{t.turma}</span>
                                     <div className={styles.trilho}>
@@ -198,6 +213,7 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                                     <span>{formatarPercentual(t.acerto)}</span>
                                 </div>
                             ))}
+                            <Paginacao {...paginaTurmas} rotulo="turmas"/>
                         </div>
                     )}
 
@@ -220,7 +236,7 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {painel.desempenhoAlunos.map((a) => (
+                                            {paginaAlunos.visiveis.map((a) => (
                                                 <tr key={a.id} className={a.atividadesConcluidas === 0 ? styles.semAtividade : ""}>
                                                     <td>{a.nome}</td>
                                                     <td className={styles.numero}>{numero(a.atividadesConcluidas)}</td>
@@ -234,6 +250,7 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                                     </table>
                                 </div>
                             )}
+                            <Paginacao {...paginaAlunos} rotulo="alunos"/>
                         </div>
                     )}
                 </>

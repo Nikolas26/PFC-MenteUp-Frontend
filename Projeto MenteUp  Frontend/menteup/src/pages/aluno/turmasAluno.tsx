@@ -2,7 +2,10 @@ import {useEffect, useMemo, useState} from "react";
 import {Check, Clock, LogOut, Plus, Search, Users, X} from "lucide-react";
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {apiFetch, lerErro} from "../../services/api.ts";
+import {gravarCache, lerCache} from "../../services/cacheTelas";
 import styles from "./turmasAluno.module.css";
 
 // Resposta de GET /alunos/me/turmas/disponiveis
@@ -27,9 +30,11 @@ const FILTROS: { id: Filtro; rotulo: string }[] = [
  * O aluno não entra nem sai da turma sozinho: ele envia um PEDIDO,
  * e o professor da turma (ou um administrador) aprova ou recusa.
  */
+const CHAVE_CACHE = "/alunos/me/turmas/disponiveis";
+
 function TurmasAluno() {
-    const [turmas, setTurmas] = useState<TurmaDoAluno[]>([]);
-    const [carregando, setCarregando] = useState(true);
+    const [turmas, setTurmas] = useState<TurmaDoAluno[]>(() => lerCache<TurmaDoAluno[]>(CHAVE_CACHE) ?? []);
+    const [carregando, setCarregando] = useState(() => lerCache(CHAVE_CACHE) === undefined);
     const [processando, setProcessando] = useState<number | null>(null);
     const [erro, setErro] = useState("");
     const [aviso, setAviso] = useState("");
@@ -46,7 +51,9 @@ function TurmasAluno() {
                     throw new Error("Falha ao consultar as turmas.");
                 }
 
-                setTurmas(await resposta.json());
+                const dados: TurmaDoAluno[] = await resposta.json();
+                setTurmas(dados);
+                gravarCache(CHAVE_CACHE, dados);
             } catch (error) {
                 console.error("Erro ao buscar as turmas:", error);
                 setErro("Não foi possível carregar as turmas.");
@@ -73,6 +80,8 @@ function TurmasAluno() {
             return passaFiltro && (!termo || turma.nome.toLowerCase().includes(termo));
         });
     }, [turmas, filtro, busca]);
+
+    const paginacao = usePaginacao(turmasFiltradas, 12, `${filtro}|${busca}`);
 
     // Envia o pedido de entrada ou de saída
     async function solicitar(turma: TurmaDoAluno) {
@@ -188,8 +197,9 @@ function TurmasAluno() {
                     )}
                 </div>
             ) : (
+                <>
                 <div className={styles.grid}>
-                    {turmasFiltradas.map((turma) => (
+                    {paginacao.visiveis.map((turma) => (
                         <CartaoTurma
                             key={turma.id}
                             turma={turma}
@@ -199,6 +209,8 @@ function TurmasAluno() {
                         />
                     ))}
                 </div>
+                <Paginacao {...paginacao} rotulo="turmas"/>
+                </>
             )}
         </AlunoLayout>
     );

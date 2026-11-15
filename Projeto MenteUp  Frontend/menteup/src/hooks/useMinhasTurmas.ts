@@ -1,21 +1,26 @@
 import { useEffect, useState } from "react";
 
 import { apiFetch } from "../services/api";
+import { gravarCache, lerCache } from "../services/cacheTelas";
 import { nomesTurmas, turmasDaAtividade } from "../types/aluno";
 
 type TurmaAtividade = { id: number | string; nome?: string };
 type AtividadeComTurmas = { turma?: TurmaAtividade | null; turmas?: TurmaAtividade[] | null };
 
 /// Ids das turmas em que o aluno logado está matriculado, null enquanto carrega
+const CHAVE_CACHE = "minhas-turmas";
+
 export function useMinhasTurmas(): Set<number> | null {
-    const [ids, setIds] = useState<Set<number> | null>(null);
+    const [ids, setIds] = useState<Set<number> | null>(() => lerCache<Set<number>>(CHAVE_CACHE) ?? null);
 
     useEffect(() => {
         let ativo = true;
         apiFetch("/alunos/me/turmas/disponiveis")
             .then((resposta) => (resposta.ok ? resposta.json() : []))
             .then((turmas: { id: number; matriculado: boolean }[]) => {
-                if (ativo) setIds(new Set(turmas.filter((t) => t.matriculado).map((t) => Number(t.id))));
+                const minhas = new Set(turmas.filter((t) => t.matriculado).map((t) => Number(t.id)));
+                gravarCache(CHAVE_CACHE, minhas);
+                if (ativo) setIds(minhas);
             })
             .catch(() => ativo && setIds(new Set()));
         return () => {

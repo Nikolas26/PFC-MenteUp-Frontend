@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import Paginacao from "../../components/Paginacao";
+import { usePaginacao } from "../../hooks/usePaginacao";
 import { apiFetch, lerErro } from "../../services/api";
 import { ROTA_BASE, type PerfilGestao } from "../../services/turmaDesafio";
 import type { DesempenhoDaTurma, TurmaResumo } from "../../types/desempenho";
@@ -80,6 +82,7 @@ function Desempenho({ perfil }: { perfil: PerfilGestao }) {
     const grafico = [...alunos].sort((a, b) => b.pontuacao - a.pontuacao).slice(0, 8);
     const maxPontuacao = Math.max(1, ...grafico.map((a) => a.pontuacao));
     const semAtividades = alunos.filter((a) => a.atividadesConcluidas === 0);
+    const paginacao = usePaginacao(alunos, 20, String(desempenho?.turmaId ?? ""));
 
     return (
         <LayoutGestao perfil={perfil}>
@@ -223,7 +226,7 @@ function Desempenho({ perfil }: { perfil: PerfilGestao }) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {alunos.map((aluno) => (
+                                        {paginacao.visiveis.map((aluno) => (
                                             <tr
                                                 key={aluno.alunoId}
                                                 tabIndex={0}
@@ -245,6 +248,7 @@ function Desempenho({ perfil }: { perfil: PerfilGestao }) {
                                     </tbody>
                                 </table>
                             )}
+                            <Paginacao {...paginacao} rotulo="alunos"/>
                         </section>
                     </div>
                 </>

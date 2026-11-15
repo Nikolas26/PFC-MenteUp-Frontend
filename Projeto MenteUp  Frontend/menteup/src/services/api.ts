@@ -1,3 +1,4 @@
+import { limparCache } from "./cacheTelas";
 import { deixarAvisoLogin, sair } from "./usuarioLogado";
 
 export const API_URL = import.meta.env.VITE_API_URL;
@@ -41,6 +42,12 @@ export async function apiFetch(
         window.location.href = "/login";
 
         throw new Error("Não autorizado");
+    }
+
+    /// Criou, editou ou excluiu algo: os dados guardados das telas podem ter ficado velhos
+    const metodo = (options.method ?? "GET").toUpperCase();
+    if (metodo !== "GET" && resposta.ok) {
+        limparCache();
     }
 
     /// Saiu uma versão nova do Termo ou da Política: a pessoa precisa aceitar antes de continuar

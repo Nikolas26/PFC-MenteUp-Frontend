@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
-import logoMenteUp from "../assets/logo-menteup.png";
+/// Versão 96×96 em WebP (4 KB): nítida até 48 px em telas de alta resolução
+import logoMenteUp from "../assets/logo-menteup.webp";
 import styles from "./Logo.module.css";
 
 interface LogoMarcaProps {

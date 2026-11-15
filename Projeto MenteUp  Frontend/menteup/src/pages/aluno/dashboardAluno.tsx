@@ -12,6 +12,7 @@ import {
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import { apiFetch } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
 import {
     idDoUsuario,
     nomeCurto,
@@ -59,10 +60,11 @@ function DashboardAluno() {
     const usuario = obterUsuarioLogado();
     const meuId = idDoUsuario(usuario);
 
-    const [atividades, setAtividades] = useState<AtividadeAluno[]>([]);
-    const [ranking, setRanking] = useState<RankingAluno[]>([]);
-    const [desafios, setDesafios] = useState<Desafio[]>([]);
-    const [carregando, setCarregando] = useState(true);
+    /// Mesmas chaves das telas de atividades, ranking e desafios: o que uma busca, a outra reaproveita
+    const [atividades, setAtividades] = useState<AtividadeAluno[]>(() => lerCache<AtividadeAluno[]>("/alunos/me/atividades") ?? []);
+    const [ranking, setRanking] = useState<RankingAluno[]>(() => lerCache<RankingAluno[]>("/ranking") ?? []);
+    const [desafios, setDesafios] = useState<Desafio[]>(() => lerCache<Desafio[]>("/desafios") ?? []);
+    const [carregando, setCarregando] = useState(() => lerCache("/alunos/me/atividades") === undefined);
     const [erro, setErro] = useState("");
     const [agora, setAgora] = useState(() => new Date());
     const { resumo } = useConquistas();
@@ -71,7 +73,7 @@ function DashboardAluno() {
     useEffect(() => {
         async function carregar() {
             try {
-                setCarregando(true);
+                setCarregando(lerCache("/alunos/me/atividades") === undefined);
                 setErro("");
 
                 const [respAtividades, respRanking, respDesafios] = await Promise.all([
@@ -81,17 +83,23 @@ function DashboardAluno() {
                 ]);
 
                 if (respAtividades.ok) {
-                    setAtividades(await respAtividades.json());
+                    const dadosAtividades: AtividadeAluno[] = await respAtividades.json();
+                    setAtividades(dadosAtividades);
+                    gravarCache("/alunos/me/atividades", dadosAtividades);
                 } else {
                     setErro("Não foi possível carregar suas atividades.");
                 }
 
                 if (respRanking.ok) {
-                    setRanking(await respRanking.json());
+                    const dadosRanking: RankingAluno[] = await respRanking.json();
+                    setRanking(dadosRanking);
+                    gravarCache("/ranking", dadosRanking);
                 }
 
                 if (respDesafios.ok) {
-                    setDesafios(await respDesafios.json());
+                    const dadosDesafios: Desafio[] = await respDesafios.json();
+                    setDesafios(dadosDesafios);
+                    gravarCache("/desafios", dadosDesafios);
                 }
             } catch (error) {
                 console.error("Erro ao carregar dashboard:", error);
