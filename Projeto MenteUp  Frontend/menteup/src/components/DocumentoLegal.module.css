@@ -178,6 +178,73 @@
   color: var(--mu-app-text);
 }
 
+.versao {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mu-mint);
+}
+
+.aviso {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 12px;
+  background: rgba(97, 95, 255, 0.18);
+  font-size: 14px;
+  color: var(--mu-app-text);
+}
+
+.aviso button,
+.versoes button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3fd8cc;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aviso button:hover,
+.versoes button:hover {
+  text-decoration: underline;
+}
+
+.versoes {
+  margin: 24px 0 0;
+  padding: 16px 20px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 14px;
+  background: var(--mu-app-glass);
+  font-size: 14px;
+  color: var(--mu-app-muted);
+}
+
+.versoes summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--mu-app-text);
+  cursor: pointer;
+}
+
+.versoes ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.versoes li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .other {
   margin: 24px 0 0;
   text-align: center;
@@ -197,6 +264,9 @@
 
 .brand:focus-visible,
 .back:focus-visible,
+.aviso button:focus-visible,
+.versoes button:focus-visible,
+.versoes summary:focus-visible,
 .other a:focus-visible {
   outline: 2px solid var(--mu-mint);
   outline-offset: 2px;
