@@ -14,6 +14,8 @@ interface ConfirmarExclusaoProps {
     /** "perigo" (padrão) para excluir; "confirmar" para ações sem perda, como finalizar uma atividade */
     variante?: "perigo" | "confirmar";
     rotuloCancelar?: string;
+    /// Conteúdo extra entre o texto e os botões, como um campo de senha
+    children?: ReactNode;
 }
 
 function ConfirmarExclusao({
@@ -26,8 +28,11 @@ function ConfirmarExclusao({
     onCancelar,
     variante = "perigo",
     rotuloCancelar = "Cancelar",
+    children,
 }: ConfirmarExclusaoProps) {
     const perigo = variante === "perigo";
+    /// Com conteúdo extra o foco fica no próprio conteúdo
+    const focarCancelar = !children;
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -56,13 +61,14 @@ function ConfirmarExclusao({
                 <p id="confirmar-exclusao-texto" className={styles.text}>
                     {mensagem}
                 </p>
+                {children && <div className={styles.conteudo}>{children}</div>}
                 <div className={styles.actions}>
                     <button
                         type="button"
                         className={styles.cancelButton}
                         onClick={onCancelar}
                         disabled={processando}
-                        autoFocus
+                        autoFocus={focarCancelar}
                     >
                         {rotuloCancelar}
                     </button>

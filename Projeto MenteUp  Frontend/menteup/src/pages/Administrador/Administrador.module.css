@@ -752,3 +752,73 @@
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
 }
+
+/* Exclusão de usuário */
+.acoesLinha {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iconButtonPerigo:hover {
+  background: rgba(235, 100, 86, 0.18);
+  color: var(--mu-coral);
+}
+
+.campoSenha {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rotuloSenha {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mu-app-muted);
+}
+
+.envoltorioSenha {
+  position: relative;
+}
+
+.inputSenha {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 44px;
+}
+
+.olhoSenha {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--mu-app-muted);
+  cursor: pointer;
+}
+
+.olhoSenha:hover {
+  color: var(--mu-app-text);
+}
+
+.olhoSenha:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}
+
+.erroCampo {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mu-error-text);
+}
+
+.erroModal {
+  margin: 10px 0 0;
+}

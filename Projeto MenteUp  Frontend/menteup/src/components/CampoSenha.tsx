@@ -32,6 +32,7 @@ interface CampoSenhaProps {
     ajuda?: string;
     mostrarRequisitos?: boolean;
     estilo?: EstiloCampoSenha;
+    autoFocus?: boolean;
 }
 
 const ESTILO_PADRAO: EstiloCampoSenha = {
@@ -66,6 +67,7 @@ function CampoSenha({
     ajuda,
     mostrarRequisitos = false,
     estilo = ESTILO_PADRAO,
+    autoFocus = false,
 }: CampoSenhaProps) {
     const [visivel, setVisivel] = useState(false);
     const rotuloBotao = visivel ? "Ocultar senha" : "Mostrar senha";
@@ -80,6 +82,7 @@ function CampoSenha({
                     id={id}
                     type={visivel ? "text" : "password"}
                     autoComplete={autoComplete}
+                    autoFocus={autoFocus}
                     className={estilo.input}
                     style={estilo.botaoOlho ? undefined : { paddingRight: 40 }}
                     placeholder={placeholder}
