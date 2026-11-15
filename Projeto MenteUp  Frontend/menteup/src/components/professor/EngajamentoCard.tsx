@@ -1,23 +1,36 @@
 import { useEffect, useState } from "react";
 
-import { apiFetch } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
+import { carregarPainel } from "../../services/painel";
 import type { RankingAluno } from "../../types/aluno";
 import styles from "./EngajamentoCard.module.css";
+
+/// Mesma chave da Visão geral: quem passou por lá já tem a lista guardada
+const CHAVE_CACHE = "visao-geral-ranking";
 
 interface EngajamentoCardProps {
     alunos?: RankingAluno[] | null;
 }
 
 export default function EngajamentoCard({ alunos }: EngajamentoCardProps) {
-    const [buscados, setBuscados] = useState<RankingAluno[] | null>(null);
     const precisaBuscar = alunos === undefined;
+    const [buscados, setBuscados] = useState<RankingAluno[] | null>(
+        () => (precisaBuscar ? lerCache<RankingAluno[] | null>(CHAVE_CACHE) ?? null : null)
+    );
 
+    /// Mesma fonte da Visão geral: só os alunos das turmas do professor, no último ano
     useEffect(() => {
         if (!precisaBuscar) return;
         let ativo = true;
-        apiFetch("/ranking")
-            .then((r) => (r.ok ? r.json() : null))
-            .then((lista: RankingAluno[] | null) => {
+        carregarPainel({ dias: 365, turmaId: null, alunoId: null })
+            .then((painel) => {
+                const lista: RankingAluno[] = painel.desempenhoAlunos.map((a) => ({
+                    usuarioId: a.id,
+                    nomeUsuario: a.nome,
+                    pontuacaoTotal: a.pontosAtividades + a.pontosDesafios,
+                    atividadesConcluidas: a.atividadesConcluidas,
+                }));
+                gravarCache(CHAVE_CACHE, lista);
                 if (ativo) setBuscados(lista);
             })
             .catch(() => undefined);
