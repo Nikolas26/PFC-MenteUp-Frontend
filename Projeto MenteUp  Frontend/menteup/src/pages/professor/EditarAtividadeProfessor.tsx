@@ -12,10 +12,11 @@ import {
     validarPerguntas,
     type PerguntaRequest,
 } from "../../components/atividades/Editores";
+import SeletorTurmas, { mensagemErroTurmas } from "../../components/atividades/SeletorTurmas";
 import ProfessorDaTurma from "../../components/ProfessorDaTurma";
 import { apiFetch, lerErro } from "../../services/api";
 import { podeAlterarTurma, type TurmaResumo } from "../../services/turmaDesafio";
-import { NOME_TIPO, type TipoAtividade } from "../../types/aluno";
+import { NOME_TIPO, turmasDaAtividade, type TipoAtividade } from "../../types/aluno";
 import styles from "./CriarAtividadeProfessor.module.css";
 
 type Turma = TurmaResumo;
@@ -42,6 +43,7 @@ interface Atividade {
     status: string;
     tipo?: TipoAtividade;
     turma?: Turma;
+    turmas?: Turma[];
     perguntas?: Pergunta[];
 }
 
@@ -107,7 +109,8 @@ function EditarAtividadeProfessor() {
     const [descricao, setDescricao] = useState("");
     const [pontuacao, setPontuacao] = useState(1);
     const [status, setStatus] = useState("PENDENTE");
-    const [turmaId, setTurmaId] = useState("");
+    const [turmaIds, setTurmaIds] = useState<number[]>([]);
+    const [turmasVinculadas, setTurmasVinculadas] = useState<Turma[]>([]);
     const [turmas, setTurmas] = useState<Turma[]>([]);
     const [tituloOriginal, setTituloOriginal] = useState("");
 
@@ -149,7 +152,9 @@ function EditarAtividadeProfessor() {
                 setDescricao(base.descricao || "");
                 setPontuacao(base.pontuacao || 1);
                 setStatus(base.status || "PENDENTE");
-                setTurmaId(base.turma?.id ? String(base.turma.id) : "");
+                const vinculadas = turmasDaAtividade(base);
+                setTurmasVinculadas(vinculadas);
+                setTurmaIds(vinculadas.map((t) => t.id));
                 setTipo(tipoAtual);
                 setPerguntas(lista.length ? lista : perguntasIniciais(tipoAtual));
                 setOriginal({ tipo: tipoAtual, perguntas: lista });
@@ -170,7 +175,7 @@ function EditarAtividadeProfessor() {
             try {
                 const response = await apiFetch("/turmas/all?incluirArquivadas=true");
                 if (!response.ok) throw new Error("Erro ao buscar turmas");
-                // O professor só move a atividade entre as turmas dele
+                /// O professor só vincula a atividade às turmas dele
                 const todas: Turma[] = await response.json();
                 setTurmas(todas.filter((t) => podeAlterarTurma(t, perfil)));
             } catch (error) {
@@ -181,6 +186,13 @@ function EditarAtividadeProfessor() {
     }, [perfil]);
 
     const sair = () => navigate(`${area}/atividades`);
+
+    /// Turmas ativas do usuário e as já vinculadas, mesmo arquivadas, para não desvincular sem querer
+    const opcoesTurmas = [
+        ...turmas.filter((t) => !t.arquivada || turmasVinculadas.some((v) => v.id === t.id)),
+        ...turmasVinculadas.filter((v) => !turmas.some((t) => t.id === v.id)),
+    ];
+    const primeiraSelecionada = opcoesTurmas.find((t) => t.id === turmaIds[0]);
 
     function escolherTipo(novo: TipoAtividade) {
         if (novo === tipo) return;
@@ -204,7 +216,7 @@ function EditarAtividadeProfessor() {
 
     function validar(): string | null {
         if (!titulo.trim()) return "Informe o título da atividade.";
-        if (!turmaId) return "Selecione uma turma.";
+        if (turmaIds.length === 0) return "Selecione ao menos uma turma.";
         if (!pontuacao || pontuacao <= 0) return "Informe uma pontuação maior que zero.";
         if (pontuacao > 1000) return "A pontuação deve ser no máximo 1000 XP.";
         if (!descricao.trim()) return "Informe a descrição da atividade.";
@@ -229,12 +241,12 @@ function EditarAtividadeProfessor() {
                     descricao: descricao.trim(),
                     pontuacao: Number(pontuacao),
                     status,
-                    turma: { id: Number(turmaId) },
+                    turmas: turmaIds.map((turmaId) => ({ id: turmaId })),
                 }),
             });
             if (!response.ok) {
                 const erroApi = await lerErro(response, "Não foi possível atualizar a atividade.");
-                throw new Error(erroApi.mensagem);
+                throw new Error(mensagemErroTurmas(response.status, erroApi));
             }
 
             if (perguntasAlteradas && !bloqueado) {
@@ -316,55 +328,49 @@ function EditarAtividadeProfessor() {
                 </label>
                 <input id="titulo" className={styles.input} value={titulo} onChange={(e) => setTitulo(e.target.value)} />
 
+                <span className={styles.label}>Turmas</span>
+                <SeletorTurmas
+                    turmas={opcoesTurmas}
+                    selecionadas={turmaIds}
+                    onChange={setTurmaIds}
+                    perfil={perfil}
+                    vinculadas={turmasVinculadas.map((t) => t.id)}
+                />
+                {perfil === "ADMINISTRADOR" && (
+                    <ProfessorDaTurma
+                        turma={primeiraSelecionada}
+                        onVinculado={(atualizada) =>
+                            setTurmas((lista) => lista.map((t) => (t.id === atualizada.id ? atualizada : t)))
+                        }
+                    />
+                )}
+
                 <div className={styles.row}>
                     <div>
-                        <label className={styles.label} htmlFor="turma">
-                            Turma
+                        <label className={styles.label} htmlFor="pontuacao">
+                            Pontuação (XP)
                         </label>
-                        <select id="turma" className={styles.input} value={turmaId} onChange={(e) => setTurmaId(e.target.value)}>
-                            <option value="">Selecione uma turma</option>
-                            {turmas.filter((t) => !t.arquivada || String(t.id) === turmaId).map((t) => (
-                                <option key={t.id} value={t.id}>
-                                    {t.nome}
+                        <input
+                            id="pontuacao"
+                            type="number"
+                            min={1}
+                            max={1000}
+                            className={styles.input}
+                            value={pontuacao}
+                            onChange={(e) => setPontuacao(Number(e.target.value))}
+                        />
+                    </div>
+                    <div>
+                        <label className={styles.label} htmlFor="status">
+                            Status
+                        </label>
+                        <select id="status" className={styles.input} value={status} onChange={(e) => setStatus(e.target.value)}>
+                            {STATUS.map((s) => (
+                                <option key={s.valor} value={s.valor}>
+                                    {s.rotulo}
                                 </option>
                             ))}
                         </select>
-                        {perfil === "ADMINISTRADOR" && (
-                            <ProfessorDaTurma
-                                turma={turmas.find((t) => String(t.id) === turmaId)}
-                                onVinculado={(atualizada) =>
-                                    setTurmas((lista) => lista.map((t) => (t.id === atualizada.id ? atualizada : t)))
-                                }
-                            />
-                        )}
-                    </div>
-                    <div className={styles.row}>
-                        <div>
-                            <label className={styles.label} htmlFor="pontuacao">
-                                Pontuação (XP)
-                            </label>
-                            <input
-                                id="pontuacao"
-                                type="number"
-                                min={1}
-                                max={1000}
-                                className={styles.input}
-                                value={pontuacao}
-                                onChange={(e) => setPontuacao(Number(e.target.value))}
-                            />
-                        </div>
-                        <div>
-                            <label className={styles.label} htmlFor="status">
-                                Status
-                            </label>
-                            <select id="status" className={styles.input} value={status} onChange={(e) => setStatus(e.target.value)}>
-                                {STATUS.map((s) => (
-                                    <option key={s.valor} value={s.valor}>
-                                        {s.rotulo}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
                 </div>
 

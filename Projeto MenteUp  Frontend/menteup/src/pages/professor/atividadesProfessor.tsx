@@ -15,7 +15,8 @@ import {
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
 import ProfessorLayout, { useAreaBase } from "../../components/layout/AreaLayout";
 import { apiFetch, lerErro } from "../../services/api";
-import { NOME_TIPO, type TipoAtividade } from "../../types/aluno";
+import { mensagemErroTurmas } from "../../components/atividades/SeletorTurmas";
+import { NOME_TIPO, nomesTurmas, turmasDaAtividade, type TipoAtividade } from "../../types/aluno";
 import base from "../aluno/atividadesAluno.module.css";
 import styles from "./atividadesProfessor.module.css";
 
@@ -29,10 +30,13 @@ type Atividade = {
     status: StatusAtividade;
     tipo?: TipoAtividade;
     dataCriacao?: string;
-    turma?: {
-        id: number | string;
-        nome?: string;
-    };
+    turma?: TurmaAtividade;
+    turmas?: TurmaAtividade[];
+};
+
+type TurmaAtividade = {
+    id: number | string;
+    nome?: string;
 };
 
 type Filtro = "TODAS" | StatusAtividade;
@@ -118,13 +122,13 @@ function AtividadesProfessor() {
                     descricao: atividade.descricao,
                     pontuacao: atividade.pontuacao,
                     status: "EM_ANDAMENTO",
-                    turma: { id: atividade.turma?.id },
+                    turmas: turmasDaAtividade(atividade).map((t) => ({ id: t.id })),
                 }),
             });
 
             if (!resposta.ok) {
                 const erroApi = await lerErro(resposta, "Não foi possível publicar a atividade.");
-                setErro(erroApi.mensagem);
+                setErro(mensagemErroTurmas(resposta.status, erroApi));
                 return;
             }
 
@@ -192,7 +196,7 @@ function AtividadesProfessor() {
             const passaBusca =
                 !termo ||
                 a.titulo.toLowerCase().includes(termo) ||
-                (a.turma?.nome ?? "").toLowerCase().includes(termo);
+                nomesTurmas(a, "").toLowerCase().includes(termo);
             return passaFiltro && passaBusca;
         });
     }, [atividades, filtro, busca]);
@@ -293,8 +297,8 @@ function AtividadesProfessor() {
                         return (
                             <article key={atividade.id} className={base.card}>
                                 <div className={base.cardTop}>
-                                    <span className={base.chip} title="Turma">
-                                        {atividade.turma?.nome ?? "Sem turma"}
+                                    <span className={base.chip} title={nomesTurmas(atividade)}>
+                                        {nomesTurmas(atividade)}
                                     </span>
                                     <span className={base.xp}>+{atividade.pontuacao} XP</span>
                                 </div>
@@ -373,7 +377,8 @@ function AtividadesProfessor() {
                     titulo="Excluir atividade?"
                     mensagem={
                         <>
-                            <strong>{paraExcluir.titulo}</strong> será removida permanentemente, junto com as
+                            <strong>{paraExcluir.titulo}</strong> será removida permanentemente
+                            {turmasDaAtividade(paraExcluir).length > 1 && ` de todas as turmas (${nomesTurmas(paraExcluir)})`}, junto com as
                             perguntas e respostas dos alunos. Essa ação não pode ser desfeita.
                         </>
                     }

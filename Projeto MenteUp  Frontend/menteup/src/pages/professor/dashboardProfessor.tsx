@@ -7,7 +7,7 @@ import PainelIndicadores from "../../components/PainelIndicadores";
 import { apiFetch } from "../../services/api";
 import { carregarPainel } from "../../services/painel";
 import { nomeCurto, obterUsuarioLogado, primeiroNome } from "../../services/usuarioLogado";
-import type { RankingAluno } from "../../types/aluno";
+import { nomesTurmas, turmasDaAtividade, type RankingAluno } from "../../types/aluno";
 import styles from "./dashboardProfessor.module.css";
 
 type StatusAtividade = "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDO";
@@ -20,6 +20,7 @@ interface AtividadeProfessor {
     status: StatusAtividade;
     dataCriacao?: string;
     turma?: { id: number | string; nome?: string };
+    turmas?: { id: number | string; nome?: string }[];
 }
 
 const STATUS: Record<StatusAtividade, { rotulo: string; classe: string }> = {
@@ -71,7 +72,7 @@ function DashboardProfessor() {
             const dados: AtividadeProfessor[] = await respAtividades.json();
             setAtividades(
                 dados
-                    .filter((a) => a.turma && minhasTurmas.has(String(a.turma.id)))
+                    .filter((a) => turmasDaAtividade(a).some((t) => minhasTurmas.has(String(t.id))))
                     .sort((a, b) => Number(b.id) - Number(a.id))
             );
 
@@ -330,7 +331,7 @@ function DashboardProfessor() {
                                             }}
                                         >
                                             <td className={styles.strong}>{a.titulo}</td>
-                                            <td>{a.turma?.nome ?? "Sem turma"}</td>
+                                            <td>{nomesTurmas(a)}</td>
                                             <td>{fmt(a.pontuacao)} XP</td>
                                             <td>
                                                 <span className={`${styles.status} ${styles[status.classe]}`}>

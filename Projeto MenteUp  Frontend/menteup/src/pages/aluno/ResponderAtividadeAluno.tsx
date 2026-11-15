@@ -24,6 +24,7 @@ import {
     type Valor,
 } from "../../components/atividades/Players";
 import { NOME_TIPO, estaAberta, type AtividadeAluno, type TipoAtividade } from "../../types/aluno";
+import { nomesMinhasTurmas, useMinhasTurmas } from "../../hooks/useMinhasTurmas";
 import styles from "./ResponderAtividadeAluno.module.css";
 
 interface AlternativaResponse {
@@ -52,6 +53,7 @@ interface AtividadeResponse {
     titulo: string;
     descricao: string;
     turma: TurmaResponse;
+    turmas?: TurmaResponse[];
     pontuacao: number;
     status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDO";
     usuario: UsuarioResponse | null;
@@ -93,6 +95,7 @@ function ResponderAtividadeAluno() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { verificarNovas } = useConquistas();
+    const minhasTurmas = useMinhasTurmas();
 
     const [questionario, setQuestionario] = useState<QuestionarioResponse | null>(null);
     const [carregando, setCarregando] = useState(true);
@@ -357,7 +360,7 @@ function ResponderAtividadeAluno() {
         );
     }
 
-    const assunto = [atividade.turma?.nome, atividade.titulo].filter(Boolean).join(" - ");
+    const assunto = [nomesMinhasTurmas(atividade, minhasTurmas, ""), atividade.titulo].filter(Boolean).join(" - ");
 
     if (meuResultado) {
         const pctAcerto = meuResultado.totalQuestoes

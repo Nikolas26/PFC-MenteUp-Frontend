@@ -11,7 +11,24 @@ export interface Atividade {
     status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDO";
     tipo?: TipoAtividade;
     dataCriacao: string;
+    /// Primeira turma da lista, mantida só por compatibilidade
     turma?: Turma;
+    turmas?: Turma[];
+}
+
+/// Turmas vinculadas à atividade, usando turma quando a lista não vier
+export function turmasDaAtividade<T>(atividade: { turma?: T | null; turmas?: T[] | null }): T[] {
+    if (atividade.turmas?.length) return atividade.turmas;
+    return atividade.turma ? [atividade.turma] : [];
+}
+
+/// Nomes das turmas para exibição, por exemplo "Turma A, Turma B"
+export function nomesTurmas(
+    atividade: { turma?: { nome?: string } | null; turmas?: { nome?: string }[] | null },
+    vazio = "Sem turma"
+): string {
+    const nomes = turmasDaAtividade(atividade).map((t) => t.nome).filter(Boolean);
+    return nomes.length ? nomes.join(", ") : vazio;
 }
 
 export interface AtividadeAluno {

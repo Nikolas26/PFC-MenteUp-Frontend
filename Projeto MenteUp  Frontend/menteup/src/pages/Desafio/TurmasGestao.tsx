@@ -410,7 +410,20 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
             {paraExcluir && (paraExcluir.analise.podeExcluir ? (
                 <ConfirmarExclusao
                     titulo={`Excluir a turma "${paraExcluir.turma.nome}"?`}
-                    mensagem="A turma não tem alunos nem histórico. As atividades dela também serão excluídas. Esta ação não pode ser desfeita."
+                    mensagem={
+                        <>
+                            <span style={{display: "block"}}>
+                                A turma não tem alunos nem histórico.{" "}
+                                {paraExcluir.turma.atividade?.length
+                                    ? `${contagem(paraExcluir.turma.atividade.length, "atividade", "atividades")} desta turma também ${paraExcluir.turma.atividade.length === 1 ? "será excluída" : "serão excluídas"}.`
+                                    : "As atividades dela também serão excluídas."}
+                            </span>
+                            <span style={{display: "block", marginTop: 8}}>
+                                <strong>Atenção:</strong> atividades compartilhadas com outras turmas também serão apagadas e
+                                deixarão de aparecer nessas turmas. Esta ação não pode ser desfeita.
+                            </span>
+                        </>
+                    }
                     processando={processando}
                     onConfirmar={() => excluirTurma(paraExcluir.turma)}
                     onCancelar={() => setParaExcluir(null)}

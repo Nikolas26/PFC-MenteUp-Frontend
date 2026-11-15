@@ -1,0 +1,118 @@
+.seletor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dica {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mu-app-muted);
+}
+
+.todas {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mu-indigo-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.todas:hover {
+  text-decoration: underline;
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opcao {
+  composes: clara from "../../styles/superficie.module.css";
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--mu-app-glass-border);
+  background: var(--mu-app-glass);
+  color: var(--mu-app-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.opcao:hover:not(:disabled) {
+  border-color: var(--mu-indigo);
+}
+
+.opcao:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}
+
+.opcao:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.marcada {
+  border-color: var(--mu-indigo);
+  background: rgba(97, 95, 255, 0.2);
+}
+
+.caixa {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 1.5px solid var(--mu-app-glass-border);
+  color: #fff;
+}
+
+.marcada .caixa {
+  border-color: var(--mu-indigo);
+  background: var(--mu-indigo);
+}
+
+.nome {
+  white-space: nowrap;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mu-gold);
+}
+
+.professor {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mu-app-muted);
+}
+
+.professor::before {
+  content: "· ";
+}

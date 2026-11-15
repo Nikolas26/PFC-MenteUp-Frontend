@@ -16,7 +16,7 @@ import {
 import ProfessorLayout, { useAreaBase } from "../../components/layout/AreaLayout";
 import { PlayerAssociacao, PlayerPergunta } from "../../components/atividades/Players";
 import { apiFetch, lerErro } from "../../services/api";
-import { NOME_TIPO, type TipoAtividade } from "../../types/aluno";
+import { NOME_TIPO, nomesTurmas, turmasDaAtividade, type TipoAtividade } from "../../types/aluno";
 import styles from "./VisualizarAtividadeProfessor.module.css";
 
 interface Alternativa {
@@ -44,6 +44,10 @@ interface Atividade {
         id: number;
         nome: string;
     };
+    turmas?: {
+        id: number;
+        nome: string;
+    }[];
     perguntas: Pergunta[];
 }
 
@@ -214,8 +218,8 @@ function VisualizarAtividadeProfessor() {
                     <div className={styles.infoStat}>
                         <Users size={18} className={styles.mint} />
                         <span>
-                            <small>Turma</small>
-                            <strong>{atividade.turma?.nome || "Não informada"}</strong>
+                            <small>{turmasDaAtividade(atividade).length > 1 ? "Turmas" : "Turma"}</small>
+                            <strong>{nomesTurmas(atividade, "Não informada")}</strong>
                         </span>
                     </div>
                     <div className={styles.infoStat}>

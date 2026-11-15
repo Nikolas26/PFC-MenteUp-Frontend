@@ -12,6 +12,7 @@ import {
     validarPerguntas,
     type PerguntaRequest,
 } from "../../components/atividades/Editores";
+import SeletorTurmas, { mensagemErroTurmas } from "../../components/atividades/SeletorTurmas";
 import ProfessorDaTurma from "../../components/ProfessorDaTurma";
 import { apiFetch, lerErro } from "../../services/api";
 import { podeAlterarTurma, type TurmaResumo } from "../../services/turmaDesafio";
@@ -31,7 +32,7 @@ function CriarAtividadeProfessor() {
     const [titulo, setTitulo] = useState("");
     const [descricao, setDescricao] = useState("");
     const [pontuacao, setPontuacao] = useState(10);
-    const [turmaId, setTurmaId] = useState("");
+    const [turmaIds, setTurmaIds] = useState<number[]>([]);
     const [turmas, setTurmas] = useState<Turma[]>([]);
     const [carregandoTurmas, setCarregandoTurmas] = useState(true);
 
@@ -50,9 +51,9 @@ function CriarAtividadeProfessor() {
                 setCarregandoTurmas(true);
                 const response = await apiFetch("/turmas/all");
                 if (!response.ok) throw new Error("Erro ao buscar turmas");
-                // O professor só cria atividade nas turmas dele
+                /// Só as turmas ativas do usuário logado
                 const todas: Turma[] = await response.json();
-                setTurmas(todas.filter((t) => podeAlterarTurma(t, perfil)));
+                setTurmas(todas.filter((t) => !t.arquivada && podeAlterarTurma(t, perfil)));
             } catch (error) {
                 console.error("Erro ao carregar turmas:", error);
                 setErro("Erro ao carregar turmas. Tente novamente.");
@@ -63,13 +64,16 @@ function CriarAtividadeProfessor() {
         carregarTurmas();
     }, [perfil]);
 
-    const turma = turmas.find((t) => String(t.id) === turmaId);
+    const selecionadas = turmaIds
+        .map((id) => turmas.find((t) => t.id === id))
+        .filter((t): t is Turma => t !== undefined);
+    const nomesSelecionadas = selecionadas.map((t) => t.nome).join(", ");
     const sair = () => navigate(`${area}/atividades`);
 
     function validarEtapa(): string | null {
         if (etapa === 0) {
             if (!titulo.trim()) return "Informe o título da atividade.";
-            if (!turmaId) return "Selecione uma turma.";
+            if (turmaIds.length === 0) return "Selecione ao menos uma turma.";
             if (!pontuacao || pontuacao <= 0) return "Informe uma pontuação maior que zero.";
         if (pontuacao > 1000) return "A pontuação deve ser no máximo 1000 XP.";
             if (!descricao.trim()) return "Informe a descrição da atividade.";
@@ -118,7 +122,7 @@ function CriarAtividadeProfessor() {
                 titulo: titulo.trim(),
                 descricao: descricao.trim(),
                 pontuacao: Number(pontuacao),
-                turma: { id: Number(turmaId) },
+                turmas: turmaIds.map((id) => ({ id })),
             };
 
             let id = atividadeId;
@@ -129,7 +133,7 @@ function CriarAtividadeProfessor() {
                 });
                 if (!resposta.ok) {
                     const erroApi = await lerErro(resposta, "Não foi possível criar a atividade.");
-                    throw new Error(erroApi.mensagem);
+                    throw new Error(mensagemErroTurmas(resposta.status, erroApi));
                 }
                 const criada = await resposta.json();
                 id = Number(criada.id);
@@ -161,7 +165,7 @@ function CriarAtividadeProfessor() {
                         resposta,
                         "As perguntas foram salvas, mas não foi possível publicar a atividade."
                     );
-                    throw new Error(erroApi.mensagem);
+                    throw new Error(mensagemErroTurmas(resposta.status, erroApi));
                 }
             }
 
@@ -221,39 +225,31 @@ function CriarAtividadeProfessor() {
                             onChange={(e) => setTitulo(e.target.value)}
                         />
 
+                        <span className={styles.label}>
+                            Turmas
+                        </span>
+                        <SeletorTurmas
+                            turmas={turmas}
+                            selecionadas={turmaIds}
+                            onChange={setTurmaIds}
+                            perfil={perfil}
+                            carregando={carregandoTurmas}
+                        />
+                        {perfil === "ADMINISTRADOR" && (
+                            <ProfessorDaTurma
+                                turma={selecionadas[0]}
+                                onVinculado={(atualizada) =>
+                                    setTurmas((lista) => lista.map((t) => (t.id === atualizada.id ? atualizada : t)))
+                                }
+                            />
+                        )}
+                        {perfil === "PROFESSOR" && !carregandoTurmas && turmas.length === 0 && (
+                            <p style={{ fontSize: 13, margin: "4px 0 0" }}>
+                                Você ainda não é professor responsável por nenhuma turma ativa. Peça a um administrador para vincular você.
+                            </p>
+                        )}
+
                         <div className={styles.row}>
-                            <div>
-                                <label className={styles.label} htmlFor="turma">
-                                    Turma
-                                </label>
-                                <select
-                                    id="turma"
-                                    className={styles.input}
-                                    value={turmaId}
-                                    onChange={(e) => setTurmaId(e.target.value)}
-                                    disabled={carregandoTurmas}
-                                >
-                                    <option value="">{carregandoTurmas ? "Carregando turmas..." : "Selecione uma turma"}</option>
-                                    {turmas.map((t) => (
-                                        <option key={t.id} value={t.id}>
-                                            {t.nome}
-                                        </option>
-                                    ))}
-                                </select>
-                                {perfil === "ADMINISTRADOR" && (
-                                    <ProfessorDaTurma
-                                        turma={turma}
-                                        onVinculado={(atualizada) =>
-                                            setTurmas((lista) => lista.map((t) => (t.id === atualizada.id ? atualizada : t)))
-                                        }
-                                    />
-                                )}
-                                {perfil === "PROFESSOR" && !carregandoTurmas && turmas.length === 0 && (
-                                    <p style={{ fontSize: 13, margin: "4px 0 0" }}>
-                                        Você ainda não é professor responsável por nenhuma turma. Peça a um administrador para vincular você.
-                                    </p>
-                                )}
-                            </div>
                             <div>
                                 <label className={styles.label} htmlFor="pontuacao">
                                     Pontuação (XP)
@@ -327,7 +323,7 @@ function CriarAtividadeProfessor() {
                         </span>
                         <h2 className={styles.reviewTitle}>Pronta para publicar</h2>
                         <p className={styles.cardSubtitle}>
-                            {[titulo.trim(), resumoPerguntas, `${pontuacao} XP`, turma?.nome].filter(Boolean).join(" · ")}
+                            {[titulo.trim(), resumoPerguntas, `${pontuacao} XP`].filter(Boolean).join(" · ")}
                         </p>
                         <dl className={styles.reviewBox}>
                             <div>
@@ -339,8 +335,8 @@ function CriarAtividadeProfessor() {
                                 <dd>{resumoPerguntas}</dd>
                             </div>
                             <div>
-                                <dt>Visibilidade</dt>
-                                <dd>{turma ? `Turma ${turma.nome}` : "-"}</dd>
+                                <dt>{selecionadas.length > 1 ? "Turmas" : "Turma"}</dt>
+                                <dd>{nomesSelecionadas || "-"}</dd>
                             </div>
                         </dl>
                     </div>

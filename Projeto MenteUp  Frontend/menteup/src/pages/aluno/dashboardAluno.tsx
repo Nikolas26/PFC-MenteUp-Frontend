@@ -24,6 +24,7 @@ import ProgressoCard from "../../components/aluno/ProgressoCard";
 import { BadgeStatusDesafio } from "../../components/ComponentesDesafio";
 import { contagem, type Desafio } from "../../services/turmaDesafio";
 import { estaAberta, type AtividadeAluno, type RankingAluno } from "../../types/aluno";
+import { nomesMinhasTurmas, useMinhasTurmas } from "../../hooks/useMinhasTurmas";
 import styles from "./dashboardAluno.module.css";
 import { RostoUsuario } from "../../components/Avatar";
 
@@ -54,6 +55,7 @@ const fmt = (n: number) => n.toLocaleString("pt-BR");
 
 function DashboardAluno() {
     const navigate = useNavigate();
+    const minhasTurmas = useMinhasTurmas();
     const usuario = obterUsuarioLogado();
     const meuId = idDoUsuario(usuario);
 
@@ -225,7 +227,7 @@ function DashboardAluno() {
                                                 {item.atividade.titulo}
                                             </span>
                                             <span className={styles.rowMeta}>
-                                                {item.atividade.turma?.nome ?? "Sem turma"}
+                                                {nomesMinhasTurmas(item.atividade, minhasTurmas)}
                                                 {item.status === "EM_ANDAMENTO" &&
                                                     item.percentualConclusao != null &&
                                                     ` · ${Math.round(item.percentualConclusao)}% feito`}

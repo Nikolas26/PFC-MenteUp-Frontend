@@ -6,6 +6,7 @@ import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProgressoCard from "../../components/aluno/ProgressoCard";
 import { apiFetch } from "../../services/api";
 import { NOME_TIPO, visaoStatus, type AtividadeAluno, type VisaoStatus } from "../../types/aluno";
+import { nomesMinhasTurmas, useMinhasTurmas } from "../../hooks/useMinhasTurmas";
 import styles from "./atividadesAluno.module.css";
 
 type Filtro = "TODAS" | VisaoStatus;
@@ -38,6 +39,7 @@ function percentual(item: AtividadeAluno, visao: VisaoStatus) {
 
 function AtividadesAluno() {
     const navigate = useNavigate();
+    const minhasTurmas = useMinhasTurmas();
 
     const [itens, setItens] = useState<AtividadeAluno[]>([]);
     const [busca, setBusca] = useState("");
@@ -88,10 +90,10 @@ function AtividadesAluno() {
             const passaBusca =
                 !termo ||
                 item.atividade.titulo.toLowerCase().includes(termo) ||
-                (item.atividade.turma?.nome ?? "").toLowerCase().includes(termo);
+                nomesMinhasTurmas(item.atividade, minhasTurmas, "").toLowerCase().includes(termo);
             return passaFiltro && passaBusca;
         });
-    }, [itens, filtro, busca]);
+    }, [itens, filtro, busca, minhasTurmas]);
 
     const filtrosVisiveis = FILTROS.filter((f) => f.id !== "ENCERRADA" || contagem.ENCERRADA > 0);
 
@@ -186,8 +188,8 @@ function AtividadesAluno() {
                         return (
                             <article key={atividade.id} className={styles.card}>
                                 <div className={styles.cardTop}>
-                                    <span className={styles.chip} title="Turma">
-                                        {atividade.turma?.nome ?? "Sem turma"}
+                                    <span className={styles.chip} title={nomesMinhasTurmas(atividade, minhasTurmas)}>
+                                        {nomesMinhasTurmas(atividade, minhasTurmas)}
                                     </span>
                                     <span className={styles.xp}>{xp}</span>
                                 </div>
