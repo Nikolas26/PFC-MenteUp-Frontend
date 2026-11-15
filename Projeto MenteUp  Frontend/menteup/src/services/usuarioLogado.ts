@@ -1,3 +1,5 @@
+import { limparCache } from "./cacheTelas";
+
 export interface UsuarioLogado {
     id?: number;
     usuarioId?: number;
@@ -47,6 +49,7 @@ export function nomeCurto(nome?: string): string {
 }
 
 export function sair() {
+    limparCache();
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
     localStorage.removeItem("usuarioId");

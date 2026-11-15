@@ -13,8 +13,11 @@ import {
 } from "lucide-react";
 
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import Paginacao from "../../components/Paginacao";
+import { usePaginacao } from "../../hooks/usePaginacao";
 import ProfessorLayout, { useAreaBase } from "../../components/layout/AreaLayout";
 import { apiFetch, lerErro } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
 import { mensagemErroTurmas } from "../../components/atividades/SeletorTurmas";
 import { NOME_TIPO, nomesTurmas, turmasDaAtividade, type TipoAtividade } from "../../types/aluno";
 import base from "../aluno/atividadesAluno.module.css";
@@ -60,14 +63,16 @@ function formatarData(data?: string) {
     return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("pt-BR");
 }
 
+const CHAVE_CACHE = "atividades-gestao";
+
 function AtividadesProfessor() {
     const navigate = useNavigate();
     const area = useAreaBase();
 
-    const [atividades, setAtividades] = useState<Atividade[]>([]);
+    const [atividades, setAtividades] = useState<Atividade[]>(() => lerCache<Atividade[]>(CHAVE_CACHE) ?? []);
     const [busca, setBusca] = useState("");
     const [filtro, setFiltro] = useState<Filtro>("TODAS");
-    const [carregando, setCarregando] = useState(true);
+    const [carregando, setCarregando] = useState(() => lerCache(CHAVE_CACHE) === undefined);
     const [erro, setErro] = useState("");
     const [aviso, setAviso] = useState("");
 
@@ -77,7 +82,8 @@ function AtividadesProfessor() {
 
     async function carregarAtividades() {
         try {
-            setCarregando(true);
+            /// Com dados guardados a lista continua na tela enquanto a versão nova chega
+            setCarregando(lerCache(CHAVE_CACHE) === undefined);
             setErro("");
 
             const resposta = await apiFetch("/atividades");
@@ -87,7 +93,9 @@ function AtividadesProfessor() {
             }
 
             const dados: Atividade[] = await resposta.json();
-            setAtividades([...dados].sort((a, b) => Number(b.id) - Number(a.id)));
+            const ordenadas = [...dados].sort((a, b) => Number(b.id) - Number(a.id));
+            setAtividades(ordenadas);
+            gravarCache(CHAVE_CACHE, ordenadas);
         } catch (error) {
             console.error(error);
             setErro("Não foi possível carregar as atividades.");
@@ -201,6 +209,8 @@ function AtividadesProfessor() {
         });
     }, [atividades, filtro, busca]);
 
+    const paginacao = usePaginacao(filtradas, 12, `${filtro}|${busca}`);
+
     return (
         <ProfessorLayout>
             <header className={`${base.header} ${styles.headerRow}`}>
@@ -288,8 +298,9 @@ function AtividadesProfessor() {
                     )}
                 </div>
             ) : (
+                <>
                 <div className={base.grid}>
-                    {filtradas.map((atividade) => {
+                    {paginacao.visiveis.map((atividade) => {
                         const status = STATUS[atividade.status] ?? STATUS.PENDENTE;
                         const data = formatarData(atividade.dataCriacao);
                         const rascunho = atividade.status === "PENDENTE";
@@ -370,6 +381,8 @@ function AtividadesProfessor() {
                         );
                     })}
                 </div>
+                <Paginacao {...paginacao} rotulo="atividades"/>
+                </>
             )}
 
             {paraExcluir && (

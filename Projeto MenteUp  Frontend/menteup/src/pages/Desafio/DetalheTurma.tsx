@@ -2,6 +2,8 @@ import {useEffect, useState, type FormEvent} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {ArrowLeft, BookOpen, Check, Inbox, Plus, UserMinus, UserPlus, Users, X, Zap} from "lucide-react";
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {BadgeStatusDesafio} from "../../components/ComponentesDesafio";
 import {apiFetch, lerErro} from "../../services/api";
 import {
@@ -153,6 +155,12 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
         }
     }
 
+    /// Precisa vir antes dos retornos de carregamento: hooks não podem ser condicionais
+    const paginaAlunos = usePaginacao(turma?.alunos ?? [], 15, id);
+    const paginaSolicitacoes = usePaginacao(solicitacoes, 8, id);
+    const paginaDesafios = usePaginacao(desafios, 8, id);
+    const paginaAtividades = usePaginacao(turma?.atividade ?? [], 8, id);
+
     const voltar = (
         <button type="button" onClick={() => navigate(`${base}/turmas`)} className={styles.back}>
             <ArrowLeft size={16}/> Voltar para turmas
@@ -268,7 +276,7 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                 <Inbox size={14}/> {contagem(solicitacoes.length, "pedido aguardando resposta", "pedidos aguardando resposta")}
                             </p>
                             <ul className={styles.people}>
-                                {solicitacoes.map((solicitacao) => (
+                                {paginaSolicitacoes.visiveis.map((solicitacao) => (
                                     <li key={solicitacao.id} className={styles.person}>
                                         <span className={styles.personInfo}>
                                             <strong>{solicitacao.alunoNome}</strong>
@@ -295,14 +303,16 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                     </li>
                                 ))}
                             </ul>
+                            <Paginacao {...paginaSolicitacoes} rotulo="pedidos"/>
                         </div>
                     )}
 
                     {turma.alunos.length === 0 ? (
                         <p className={styles.muted}>Nenhum aluno nesta turma ainda.</p>
                     ) : (
+                        <>
                         <ul className={styles.people}>
-                            {turma.alunos.map((aluno) => (
+                            {paginaAlunos.visiveis.map((aluno) => (
                                 <li key={aluno.id} className={styles.person}>
                                     <span className={styles.personAvatar}>{aluno.nomeUsuario.charAt(0).toUpperCase()}</span>
                                     <span className={styles.personInfo}>
@@ -321,6 +331,8 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                 </li>
                             ))}
                         </ul>
+                        <Paginacao {...paginaAlunos} rotulo="alunos"/>
+                        </>
                     )}
                 </section>
 
@@ -346,8 +358,9 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                     {desafios.length === 0 ? (
                         <p className={styles.muted}>Nenhum desafio nesta turma.</p>
                     ) : (
+                        <>
                         <ul className={styles.items}>
-                            {desafios.map((desafio) => (
+                            {paginaDesafios.visiveis.map((desafio) => (
                                 <li key={desafio.id}>
                                     <button type="button" onClick={() => navigate(`${base}/desafios/${desafio.id}`)} className={styles.item}>
                                         <Zap size={16}/>
@@ -357,6 +370,8 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                 </li>
                             ))}
                         </ul>
+                        <Paginacao {...paginaDesafios} rotulo="desafios"/>
+                        </>
                     )}
                 </section>
 
@@ -368,8 +383,9 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                     {turma.atividade.length === 0 ? (
                         <p className={styles.muted}>Nenhuma atividade nesta turma.</p>
                     ) : (
+                        <>
                         <ul className={styles.items}>
-                            {turma.atividade.map((atividade) => (
+                            {paginaAtividades.visiveis.map((atividade) => (
                                 <li key={atividade.id}>
                                     <button type="button" onClick={() => navigate(`${base}/atividades/${atividade.id}`)} className={styles.item}>
                                         <BookOpen size={16}/>
@@ -378,6 +394,8 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                 </li>
                             ))}
                         </ul>
+                        <Paginacao {...paginaAtividades} rotulo="atividades"/>
+                        </>
                     )}
                 </section>
             </div>

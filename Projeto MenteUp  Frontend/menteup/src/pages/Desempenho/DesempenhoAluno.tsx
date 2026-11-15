@@ -3,6 +3,8 @@ import {Link, useParams} from "react-router-dom";
 import {ArrowLeft, BookOpen, Check, MessageSquare, X} from "lucide-react";
 import {IconeDesafio} from "../../components/ComponentesDesafio";
 import ConquistasDoAluno from "../../components/conquistas/ConquistasDoAluno";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {apiFetch, lerErro} from "../../services/api";
 import {ROTA_BASE, type PerfilGestao} from "../../services/turmaDesafio";
 import type {AtividadeDoAluno, ComentarioSalvo, DesempenhoIndividual, QuestaoAluno} from "../../types/desempenho";
@@ -91,6 +93,9 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
         })),
     ] : [];
 
+    const paginaAtividades = usePaginacao(dados?.atividades ?? [], 10, `${turmaId}|${alunoId}`);
+    const paginaDesafios = usePaginacao(dados?.desafios ?? [], 10, `${turmaId}|${alunoId}`);
+
     const totalAcertos = dados
         ? dados.atividades.reduce((soma, a) => soma + a.acertos, 0) + dados.desafios.reduce((soma, d) => soma + d.acertos, 0)
         : 0;
@@ -157,7 +162,7 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
                                 <p className={dash.empty}>O aluno ainda não concluiu atividades nesta turma.</p>
                             ) : (
                                 <div className={styles.items}>
-                                    {dados.atividades.map((atividade) => (
+                                    {paginaAtividades.visiveis.map((atividade) => (
                                         <CartaoAtividade
                                             key={atividade.resultadoId}
                                             atividade={atividade}
@@ -167,6 +172,7 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
                                     ))}
                                 </div>
                             )}
+                            <Paginacao {...paginaAtividades} rotulo="atividades"/>
                         </section>
 
                         <section className={dash.card}>
@@ -180,7 +186,7 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
                                 <p className={dash.empty}>O aluno ainda não respondeu desafios nesta turma.</p>
                             ) : (
                                 <div className={styles.items}>
-                                    {dados.desafios.map((desafio) => (
+                                    {paginaDesafios.visiveis.map((desafio) => (
                                         <article key={desafio.desafioId} className={styles.item}>
                                             <div className={styles.itemHeader}>
                                                 <h3 className={styles.itemTitle}>{desafio.titulo}</h3>
@@ -193,6 +199,7 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
                                     ))}
                                 </div>
                             )}
+                            <Paginacao {...paginaDesafios} rotulo="desafios"/>
                         </section>
                     </div>
                 </>
@@ -202,6 +209,9 @@ function DesempenhoAluno({perfil}: { perfil: PerfilGestao }) {
 }
 
 function GraficoAproveitamento({barras}: { barras: Barra[] }) {
+    /// Com muitas atividades as barras ficariam espremidas: 12 por vez
+    const paginacao = usePaginacao(barras, 12);
+
     return (
         <section className={dash.card}>
             <header className={dash.cardHeader}>
@@ -218,9 +228,9 @@ function GraficoAproveitamento({barras}: { barras: Barra[] }) {
                 <div
                     className={`${dash.chart} ${styles.chart}`}
                     role="img"
-                    aria-label={barras.map((b) => `${b.rotulo}: ${b.percentual}%`).join("; ")}
+                    aria-label={paginacao.visiveis.map((b) => `${b.rotulo}: ${b.percentual}%`).join("; ")}
                 >
-                    {barras.map((barra) => (
+                    {paginacao.visiveis.map((barra) => (
                         <div key={barra.chave} className={`${dash.barCol} ${styles.barCol}`}>
                             <span className={dash.barValue}>{barra.percentual}%</span>
                             <div className={dash.barTrack}>
@@ -235,6 +245,7 @@ function GraficoAproveitamento({barras}: { barras: Barra[] }) {
                     ))}
                 </div>
             )}
+            <Paginacao {...paginacao} rotulo="resultados"/>
         </section>
     );
 }

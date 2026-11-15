@@ -4,7 +4,10 @@ import {Archive, ArchiveRestore, Check, ChevronDown, ChevronRight, Eye, Pencil, 
 import AdminLayout from "../../components/administrador/AdminLayout";
 import ProfessorLayout from "../../components/professor/ProfessorLayout";
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {apiFetch, lerErro} from "../../services/api";
+import {gravarCache, lerCache} from "../../services/cacheTelas";
 import {
     carregarProfessores,
     contagem,
@@ -27,15 +30,18 @@ function sigla(nome: string) {
     return nome.trim().split(/\s+/)[0]?.slice(0, 2) || "?";
 }
 
+const CHAVE_TURMAS = "turmas-gestao";
+const CHAVE_DESAFIOS = "desafios-por-turma";
+
 function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
     const navigate = useNavigate();
     const base = ROTA_BASE[perfil];
     const administrador = perfil === "ADMINISTRADOR";
 
-    const [turmas, setTurmas] = useState<TurmaDetalhe[]>([]);
-    const [desafiosPorTurma, setDesafiosPorTurma] = useState<Record<number, number>>({});
+    const [turmas, setTurmas] = useState<TurmaDetalhe[]>(() => lerCache<TurmaDetalhe[]>(CHAVE_TURMAS) ?? []);
+    const [desafiosPorTurma, setDesafiosPorTurma] = useState<Record<number, number>>(() => lerCache<Record<number, number>>(CHAVE_DESAFIOS) ?? {});
     const [busca, setBusca] = useState("");
-    const [carregando, setCarregando] = useState(true);
+    const [carregando, setCarregando] = useState(() => lerCache(CHAVE_TURMAS) === undefined);
     const [erro, setErro] = useState("");
 
     const [novoNome, setNovoNome] = useState("");
@@ -65,7 +71,9 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
                 ]);
                 if (!resposta.ok) throw new Error("Falha ao consultar as turmas.");
                 const dados: TurmaDetalhe[] = await resposta.json();
-                setTurmas(dados.sort((a, b) => a.nome.localeCompare(b.nome)));
+                const ordenadas = dados.sort((a, b) => a.nome.localeCompare(b.nome));
+                setTurmas(ordenadas);
+                gravarCache(CHAVE_TURMAS, ordenadas);
 
                 if (respostaDesafios.ok) {
                     const desafios: Desafio[] = await respostaDesafios.json();
@@ -75,6 +83,7 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
                         if (turmaId !== undefined) contagemDesafios[turmaId] = (contagemDesafios[turmaId] ?? 0) + 1;
                     });
                     setDesafiosPorTurma(contagemDesafios);
+                    gravarCache(CHAVE_DESAFIOS, contagemDesafios);
                 }
             } catch (error) {
                 console.error("Erro ao carregar turmas:", error);
@@ -212,6 +221,8 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
     const arquivadas = filtradas.filter((turma) => turma.arquivada);
     const totalAtivas = turmas.filter((turma) => !turma.arquivada).length;
     const totalArquivadas = turmas.length - totalAtivas;
+    const paginaAtivas = usePaginacao(ativas, 15, busca);
+    const paginaArquivadas = usePaginacao(arquivadas, 15, busca);
 
     const textoArquivar =
         "Ao arquivar, a turma sai das listas e não recebe atividades, desafios nem alunos novos. "
@@ -381,9 +392,12 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
                     <p>{busca ? "Nenhuma turma ativa encontrada." : "Crie a primeira turma no campo acima."}</p>
                 </div>
             ) : (
+                <>
                 <ul className={styles.list}>
-                    {ativas.map(linhaTurma)}
+                    {paginaAtivas.visiveis.map(linhaTurma)}
                 </ul>
+                <Paginacao {...paginaAtivas} rotulo="turmas ativas"/>
+                </>
             )}
 
             {totalArquivadas > 0 && (
@@ -400,9 +414,12 @@ function TurmasGestao({perfil}: { perfil: PerfilGestao }) {
                     {mostrarArquivadas && (arquivadas.length === 0 ? (
                         <p className={styles.empty}>Nenhuma turma arquivada encontrada.</p>
                     ) : (
+                        <>
                         <ul className={styles.list} style={{marginTop: 12}}>
-                            {arquivadas.map(linhaTurma)}
+                            {paginaArquivadas.visiveis.map(linhaTurma)}
                         </ul>
+                        <Paginacao {...paginaArquivadas} rotulo="turmas arquivadas"/>
+                        </>
                     ))}
                 </section>
             )}

@@ -4,7 +4,10 @@ import { BookOpen, CalendarDays, ChevronRight, Gamepad2, Lock, Search } from "lu
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProgressoCard from "../../components/aluno/ProgressoCard";
+import Paginacao from "../../components/Paginacao";
+import { usePaginacao } from "../../hooks/usePaginacao";
 import { apiFetch } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
 import { NOME_TIPO, visaoStatus, type AtividadeAluno, type VisaoStatus } from "../../types/aluno";
 import { nomesMinhasTurmas, useMinhasTurmas } from "../../hooks/useMinhasTurmas";
 import styles from "./atividadesAluno.module.css";
@@ -37,20 +40,23 @@ function percentual(item: AtividadeAluno, visao: VisaoStatus) {
     return Math.max(0, Math.min(100, Math.round(item.percentualConclusao ?? 0)));
 }
 
+const CHAVE_CACHE = "/alunos/me/atividades";
+
 function AtividadesAluno() {
     const navigate = useNavigate();
     const minhasTurmas = useMinhasTurmas();
 
-    const [itens, setItens] = useState<AtividadeAluno[]>([]);
+    const [itens, setItens] = useState<AtividadeAluno[]>(() => lerCache<AtividadeAluno[]>(CHAVE_CACHE) ?? []);
     const [busca, setBusca] = useState("");
     const [filtro, setFiltro] = useState<Filtro>("TODAS");
-    const [carregando, setCarregando] = useState(true);
+    const [carregando, setCarregando] = useState(() => lerCache(CHAVE_CACHE) === undefined);
     const [erro, setErro] = useState("");
 
     useEffect(() => {
         async function buscarAtividades() {
             try {
-                setCarregando(true);
+                /// Com dados guardados a lista continua na tela enquanto a versão nova chega
+                setCarregando(lerCache(CHAVE_CACHE) === undefined);
                 setErro("");
 
                 const resposta = await apiFetch("/alunos/me/atividades");
@@ -61,6 +67,7 @@ function AtividadesAluno() {
 
                 const dados: AtividadeAluno[] = await resposta.json();
                 setItens(dados);
+                gravarCache(CHAVE_CACHE, dados);
             } catch (error) {
                 console.error("Erro ao buscar atividades:", error);
                 setErro("Não foi possível carregar as atividades.");
@@ -94,6 +101,8 @@ function AtividadesAluno() {
             return passaFiltro && passaBusca;
         });
     }, [itens, filtro, busca, minhasTurmas]);
+
+    const paginacao = usePaginacao(itensFiltrados, 12, `${filtro}|${busca}`);
 
     const filtrosVisiveis = FILTROS.filter((f) => f.id !== "ENCERRADA" || contagem.ENCERRADA > 0);
 
@@ -173,8 +182,9 @@ function AtividadesAluno() {
                     )}
                 </div>
             ) : (
+                <>
                 <div className={styles.grid}>
-                    {itensFiltrados.map((item) => {
+                    {paginacao.visiveis.map((item) => {
                         const { atividade } = item;
                         const visao = visaoStatus(item);
                         const pct = percentual(item, visao);
@@ -252,6 +262,8 @@ function AtividadesAluno() {
                         );
                     })}
                 </div>
+                <Paginacao {...paginacao} rotulo="atividades"/>
+                </>
             )}
         </AlunoLayout>
     );

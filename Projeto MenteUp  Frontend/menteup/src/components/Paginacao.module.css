@@ -1,0 +1,47 @@
+/* Mesmo visual do rodapé da Gestão de usuários */
+.pager {
+  margin-top: 16px;
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--mu-app-glass-border);
+  font-size: 14px;
+  color: var(--mu-app-muted);
+}
+
+.pagerButtons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageCount {
+  font-weight: 700;
+  color: var(--mu-app-text);
+}
+
+.roundButton {
+  composes: clara from "../styles/superficie.module.css";
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 50%;
+  background: var(--mu-app-glass);
+  color: var(--mu-app-text);
+  cursor: pointer;
+}
+
+.roundButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.roundButton:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}

@@ -4,12 +4,15 @@ import { Crown, RotateCw, Trophy } from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import { apiFetch } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
 import { useConquistas } from "../../hooks/useConquistas";
 import { infoNivel } from "../../services/conquistasInfo";
 import { idDoUsuario, nomeCurto, obterUsuarioLogado } from "../../services/usuarioLogado";
 import type { RankingAluno } from "../../types/aluno";
 import styles from "./Ranking.module.css";
 import { RostoUsuario } from "../../components/Avatar";
+import Paginacao from "../../components/Paginacao";
+import { usePaginacao } from "../../hooks/usePaginacao";
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
 
@@ -21,8 +24,8 @@ const PODIO = [
 
 export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMINISTRADOR" }) {
     const admin = perfil === "ADMINISTRADOR";
-    const [ranking, setRanking] = useState<RankingAluno[]>([]);
-    const [carregando, setCarregando] = useState(true);
+    const [ranking, setRanking] = useState<RankingAluno[]>(() => lerCache<RankingAluno[]>("/ranking") ?? []);
+    const [carregando, setCarregando] = useState(() => lerCache("/ranking") === undefined);
     const [erro, setErro] = useState("");
 
     const meuId = idDoUsuario(obterUsuarioLogado());
@@ -34,7 +37,8 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
 
     async function carregarRanking() {
         try {
-            setCarregando(true);
+            /// Com dados guardados o ranking continua na tela enquanto a versão nova chega
+            setCarregando(lerCache("/ranking") === undefined);
             setErro("");
 
             const resposta = await apiFetch("/ranking");
@@ -45,6 +49,7 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
 
             const dados: RankingAluno[] = await resposta.json();
             setRanking(dados);
+            gravarCache("/ranking", dados);
         } catch (error) {
             console.error("Erro ao carregar ranking:", error);
             setErro("Não foi possível carregar o ranking.");
@@ -60,6 +65,11 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
     }, [ranking, meuId]);
 
     const nivelMeu = infoNivel(resumo);
+
+    /// Do 4º lugar em diante, 20 por página
+    const restantes = useMemo(() => ranking.slice(3), [ranking]);
+    const paginacao = usePaginacao(restantes, 20);
+    const deslocamento = paginacao.pagina * 20;
 
     function textoPosicao() {
         if (!meu) return "Conclua uma atividade para entrar no ranking e começar a subir!";
@@ -166,9 +176,10 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
                                 {erro ? "Não foi possível carregar a classificação." : "Os demais colocados aparecem aqui a partir do 4º lugar."}
                             </p>
                         ) : (
-                            <ol className={styles.list} start={4}>
-                                {ranking.slice(3).map((aluno, index) => {
-                                    const posicao = index + 4;
+                            <>
+                            <ol className={styles.list} start={4 + deslocamento}>
+                                {paginacao.visiveis.map((aluno, index) => {
+                                    const posicao = index + 4 + deslocamento;
                                     const souEu = aluno.usuarioId === meuId;
 
                                     return (
@@ -196,6 +207,8 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
                                     );
                                 })}
                             </ol>
+                            <Paginacao {...paginacao} rotulo="colocados"/>
+                            </>
                         )}
                     </section>
                 </div>

@@ -5,6 +5,7 @@ import { ChevronRight, Plus, RotateCw } from "lucide-react";
 import ProfessorLayout from "../../components/professor/ProfessorLayout";
 import PainelIndicadores from "../../components/PainelIndicadores";
 import { apiFetch } from "../../services/api";
+import { gravarCache, lerCache } from "../../services/cacheTelas";
 import { carregarPainel } from "../../services/painel";
 import { nomeCurto, obterUsuarioLogado, primeiroNome } from "../../services/usuarioLogado";
 import { nomesTurmas, turmasDaAtividade, type RankingAluno } from "../../types/aluno";
@@ -45,18 +46,22 @@ function saudacao(data = new Date()) {
 
 const fmt = (n: number) => n.toLocaleString("pt-BR");
 
+const CHAVE_ATIVIDADES = "visao-geral-atividades";
+const CHAVE_RANKING = "visao-geral-ranking";
+
 function DashboardProfessor() {
     const navigate = useNavigate();
     const usuario = obterUsuarioLogado();
 
-    const [atividades, setAtividades] = useState<AtividadeProfessor[]>([]);
-    const [ranking, setRanking] = useState<RankingAluno[] | null>(null);
-    const [carregando, setCarregando] = useState(true);
+    const [atividades, setAtividades] = useState<AtividadeProfessor[]>(() => lerCache<AtividadeProfessor[]>(CHAVE_ATIVIDADES) ?? []);
+    const [ranking, setRanking] = useState<RankingAluno[] | null>(() => lerCache<RankingAluno[] | null>(CHAVE_RANKING) ?? null);
+    const [carregando, setCarregando] = useState(() => lerCache(CHAVE_ATIVIDADES) === undefined);
     const [erro, setErro] = useState("");
 
     async function carregar() {
         try {
-            setCarregando(true);
+            /// Com dados guardados a visão geral continua na tela enquanto a versão nova chega
+            setCarregando(lerCache(CHAVE_ATIVIDADES) === undefined);
             setErro("");
 
             // O painel já vem recortado pelo backend: as turmas do professor e os alunos delas.
@@ -70,21 +75,23 @@ function DashboardProfessor() {
 
             const minhasTurmas = new Set((painel?.turmas ?? []).map((t) => String(t.id)));
             const dados: AtividadeProfessor[] = await respAtividades.json();
-            setAtividades(
-                dados
-                    .filter((a) => turmasDaAtividade(a).some((t) => minhasTurmas.has(String(t.id))))
-                    .sort((a, b) => Number(b.id) - Number(a.id))
-            );
+            const minhasAtividades = dados
+                .filter((a) => turmasDaAtividade(a).some((t) => minhasTurmas.has(String(t.id))))
+                .sort((a, b) => Number(b.id) - Number(a.id));
+            setAtividades(minhasAtividades);
+            gravarCache(CHAVE_ATIVIDADES, minhasAtividades);
 
             // Engajamento: só os alunos das turmas dele (no último ano)
-            setRanking(painel
+            const engajamento = painel
                 ? painel.desempenhoAlunos.map((a) => ({
                     usuarioId: a.id,
                     nomeUsuario: a.nome,
                     pontuacaoTotal: a.pontosAtividades + a.pontosDesafios,
                     atividadesConcluidas: a.atividadesConcluidas,
                 }))
-                : null);
+                : null;
+            setRanking(engajamento);
+            gravarCache(CHAVE_RANKING, engajamento);
         } catch (error) {
             console.error("Erro ao carregar visão geral:", error);
             setErro("Não foi possível carregar os dados da visão geral.");

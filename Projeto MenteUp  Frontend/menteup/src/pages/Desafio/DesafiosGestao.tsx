@@ -2,8 +2,11 @@ import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Pencil, Play, Plus, Trash2, Trophy} from "lucide-react";
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import Paginacao from "../../components/Paginacao";
+import {usePaginacao} from "../../hooks/usePaginacao";
 import {BadgeStatusDesafio, IconeDesafio} from "../../components/ComponentesDesafio";
 import {apiFetch, lerErro} from "../../services/api";
+import {gravarCache, lerCache} from "../../services/cacheTelas";
 import {
     contagem,
     podeAlterarTurma,
@@ -16,14 +19,16 @@ import {LayoutGestao} from "./TurmasGestao";
 import styles from "./TurmasGestao.module.css";
 import desafioStyles from "./Desafios.module.css";
 
+const CHAVE_TURMAS = "turmas-por-id";
+
 function DesafiosGestao({perfil}: { perfil: PerfilGestao }) {
     const navigate = useNavigate();
     const base = ROTA_BASE[perfil];
 
-    const [desafios, setDesafios] = useState<Desafio[]>([]);
+    const [desafios, setDesafios] = useState<Desafio[]>(() => lerCache<Desafio[]>("/desafios") ?? []);
     // Turmas com o professor responsável: o professor só altera/conduz desafios das turmas dele
-    const [turmasPorId, setTurmasPorId] = useState<Record<number, TurmaResumo>>({});
-    const [carregando, setCarregando] = useState(true);
+    const [turmasPorId, setTurmasPorId] = useState<Record<number, TurmaResumo>>(() => lerCache<Record<number, TurmaResumo>>(CHAVE_TURMAS) ?? {});
+    const [carregando, setCarregando] = useState(() => lerCache("/desafios") === undefined);
     const [erro, setErro] = useState("");
     const [paraExcluir, setParaExcluir] = useState<Desafio | null>(null);
     const [excluindo, setExcluindo] = useState(false);
@@ -37,11 +42,15 @@ function DesafiosGestao({perfil}: { perfil: PerfilGestao }) {
                     apiFetch("/turmas/all?incluirArquivadas=true"),
                 ]);
                 if (!resposta.ok) throw new Error("Falha ao consultar os desafios.");
-                setDesafios(await resposta.json());
+                const dados: Desafio[] = await resposta.json();
+                setDesafios(dados);
+                gravarCache("/desafios", dados);
 
                 if (respostaTurmas.ok) {
                     const turmas: TurmaResumo[] = await respostaTurmas.json();
-                    setTurmasPorId(Object.fromEntries(turmas.map((turma) => [turma.id, turma])));
+                    const porId = Object.fromEntries(turmas.map((turma) => [turma.id, turma]));
+                    setTurmasPorId(porId);
+                    gravarCache(CHAVE_TURMAS, porId);
                 }
             } catch (error) {
                 console.error("Erro ao carregar desafios:", error);
@@ -79,6 +88,8 @@ function DesafiosGestao({perfil}: { perfil: PerfilGestao }) {
         }
     }
 
+    const paginacao = usePaginacao(desafios, 15);
+
     return (
         <LayoutGestao perfil={perfil}>
             <header className={desafioStyles.headerRow}>
@@ -104,8 +115,9 @@ function DesafiosGestao({perfil}: { perfil: PerfilGestao }) {
                     <p>Nenhum desafio criado ainda.</p>
                 </div>
             ) : (
+                <>
                 <ul className={styles.list}>
-                    {desafios.map((desafio) => {
+                    {paginacao.visiveis.map((desafio) => {
                         const encerrado = desafio.status === "ENCERRADO";
                         const aoVivo = desafio.status === "EM_ANDAMENTO";
                         const turmaDoDesafio = turmasPorId[desafio.turma.id];
@@ -173,6 +185,8 @@ function DesafiosGestao({perfil}: { perfil: PerfilGestao }) {
                         );
                     })}
                 </ul>
+                <Paginacao {...paginacao} rotulo="desafios"/>
+                </>
             )}
 
             {paraExcluir && (
