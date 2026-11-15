@@ -337,3 +337,72 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Edição de nome e e-mail */
+.nomeLinha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.botaoEditar {
+  width: 34px;
+  height: 34px;
+  margin-bottom: 6px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--mu-app-muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.botaoEditar:hover,
+.botaoEditar[aria-pressed="true"] {
+  background: var(--mu-app-glass);
+  color: var(--mu-lilac);
+}
+
+.botaoEditar:focus-visible,
+.botaoSecundario:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}
+
+.acoesForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.botaoSecundario {
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: var(--mu-radius-btn);
+  background: rgba(var(--mu-veu-rgb), 0.08);
+  color: var(--mu-app-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.botaoSecundario:hover:not(:disabled) {
+  background: rgba(var(--mu-veu-rgb), 0.14);
+}
+
+.botaoSecundario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.avisoTroca {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  color: var(--mu-gold);
+}

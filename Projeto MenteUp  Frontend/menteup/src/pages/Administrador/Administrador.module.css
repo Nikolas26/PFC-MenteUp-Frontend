@@ -822,3 +822,26 @@
 .erroModal {
   margin: 10px 0 0;
 }
+
+/* Edição de usuário */
+.ajudaCampo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mu-app-muted);
+}
+
+.avisoTroca {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 196, 77, 0.12);
+  border: 1px solid rgba(255, 196, 77, 0.4);
+  color: var(--mu-gold);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 19px;
+}
+
+.select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

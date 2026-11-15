@@ -1,6 +1,6 @@
 import {createContext, useContext, useEffect, useState, type FormEvent, type ReactNode} from "react";
 import {useNavigate} from "react-router-dom";
-import {Download, Eye, FileCheck, KeyRound, Mail, ShieldAlert, Users} from "lucide-react";
+import {Download, Eye, FileCheck, KeyRound, Mail, Pencil, ShieldAlert, Users} from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProfessorLayout from "../../components/professor/ProfessorLayout";
 import AdminLayout from "../../components/administrador/AdminLayout";
@@ -9,7 +9,8 @@ import CampoSenha, {type EstiloCampoSenha} from "../../components/CampoSenha";
 import {senhaForte} from "../../services/senha";
 import Avatar, {EscolherAvatar} from "../../components/Avatar";
 import {apiFetch, lerErro} from "../../services/api";
-import {deixarAvisoLogin, obterUsuarioLogado, sair} from "../../services/usuarioLogado";
+import {atualizarUsuarioSalvo, deixarAvisoLogin, obterUsuarioLogado, sair} from "../../services/usuarioLogado";
+import {atualizarConta, carregarConta, LIMITE_NOME, mesmoEmail, validarEdicao, type ContaEditavel, type ErrosEdicao} from "../../services/edicaoUsuario";
 import {baixarMeusDados, buscarAceites, type SituacaoAceites} from "../../services/documentos";
 import type {Perfil} from "../../services/turmaDesafio";
 import aluno from "./perfilAluno.module.css";
@@ -71,6 +72,11 @@ const ESTILO_PADRAO = {
     textoSucesso: "text-sm text-emerald-600",
     botaoPrimario: "self-start rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50",
     botaoPerigo: "mt-3 rounded-lg border border-red-300 px-5 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50",
+    nomeLinha: "flex items-center gap-2",
+    botaoEditar: "rounded-lg p-1 text-slate-400 hover:bg-slate-100",
+    acoesForm: "flex flex-wrap gap-3",
+    botaoSecundario: "rounded-lg border border-slate-200 px-5 py-2 text-sm font-semibold",
+    avisoTroca: "text-xs text-amber-600",
 };
 
 type Estilo = typeof ESTILO_PADRAO;
@@ -110,6 +116,11 @@ const ESTILO_ALUNO: Estilo = {
     textoSucesso: aluno.textoSucesso,
     botaoPrimario: aluno.botaoPrimario,
     botaoPerigo: aluno.botaoPerigo,
+    nomeLinha: aluno.nomeLinha,
+    botaoEditar: aluno.botaoEditar,
+    acoesForm: aluno.acoesForm,
+    botaoSecundario: aluno.botaoSecundario,
+    avisoTroca: aluno.avisoTroca,
 };
 
 const EstiloContext = createContext<Estilo>(ESTILO_PADRAO);
@@ -167,7 +178,8 @@ function MeuPerfil({perfil}: { perfil: Perfil }) {
 
                 {dados && (
                     <div className={s.conteudo}>
-                        <DadosPessoais dados={dados} onAvatarAlterado={(avatar) => setDados({...dados, avatar})}/>
+                        <DadosPessoais dados={dados} onAvatarAlterado={(avatar) => setDados({...dados, avatar})}
+                                       onNomeAlterado={(nome) => setDados({...dados, nome})}/>
                         <AlterarSenha/>
                         <Privacidade/>
                         <ExcluirConta administrador={dados.tipoUsuario === "ADMINISTRADOR"}/>
@@ -189,15 +201,17 @@ function salvarAvatarNoLogin(avatar: string) {
 }
 
 // Foto (avatar), nome, e-mail anonimizado, perfil e turmas
-function DadosPessoais({dados, onAvatarAlterado}: {
+function DadosPessoais({dados, onAvatarAlterado, onNomeAlterado}: {
     dados: PerfilUsuario;
     onAvatarAlterado: (avatar: string) => void;
+    onNomeAlterado: (nome: string) => void;
 }) {
     const s = useEstilo();
     const rotuloTurmas = dados.tipoUsuario === "PROFESSOR" ? "Turmas que leciona" : "Minhas turmas";
     const [escolhendo, setEscolhendo] = useState(false);
     const [salvando, setSalvando] = useState(false);
     const [erroAvatar, setErroAvatar] = useState<string | null>(null);
+    const [editando, setEditando] = useState(false);
 
     async function escolherAvatar(avatar: string) {
         setSalvando(true);
@@ -229,13 +243,31 @@ function DadosPessoais({dados, onAvatarAlterado}: {
             <div className={s.identidade}>
                 <Avatar avatar={dados.avatar} nome={dados.nome} tamanho="grande"/>
                 <div>
-                    <p className={s.nome}>{dados.nome}</p>
+                    <div className={s.nomeLinha}>
+                        <p className={s.nome}>{dados.nome}</p>
+                        <button
+                            type="button"
+                            title="Editar dados"
+                            aria-label="Editar nome e e-mail"
+                            aria-pressed={editando}
+                            onClick={() => {
+                                setEscolhendo(false);
+                                setEditando((aberto) => !aberto);
+                            }}
+                            className={s.botaoEditar}
+                        >
+                            <Pencil size={16}/>
+                        </button>
+                    </div>
                     <span className={s.badgePerfil}>
                         {NOME_PERFIL[dados.tipoUsuario] ?? dados.tipoUsuario}
                     </span>
                     <button
                         type="button"
-                        onClick={() => setEscolhendo((aberto) => !aberto)}
+                        onClick={() => {
+                            setEditando(false);
+                            setEscolhendo((aberto) => !aberto);
+                        }}
                         className={s.linkFoto}
                     >
                         {escolhendo ? "Fechar" : dados.avatar ? "Trocar foto" : "Escolher foto"}
@@ -250,6 +282,17 @@ function DadosPessoais({dados, onAvatarAlterado}: {
                                     escuro={s.escuro}/>
                     {erroAvatar && <p className={`mt-3 ${s.textoErro}`}>{erroAvatar}</p>}
                 </div>
+            )}
+
+            {editando && (
+                <EditarDados
+                    id={dados.id}
+                    onCancelar={() => setEditando(false)}
+                    onSalvo={(nome) => {
+                        onNomeAlterado(nome);
+                        setEditando(false);
+                    }}
+                />
             )}
 
             <dl className={s.dados}>
@@ -279,6 +322,115 @@ function DadosPessoais({dados, onAvatarAlterado}: {
                 )}
             </dl>
         </section>
+    );
+}
+
+/// Edição de nome e e-mail da própria conta; o tipo vai como veio do GET, sem mudar
+function EditarDados({id, onCancelar, onSalvo}: {
+    id: number;
+    onCancelar: () => void;
+    onSalvo: (nome: string) => void;
+}) {
+    const s = useEstilo();
+    const navigate = useNavigate();
+    const [conta, setConta] = useState<ContaEditavel | null>(null);
+    const [nome, setNome] = useState("");
+    const [email, setEmail] = useState("");
+    const [erroCarga, setErroCarga] = useState<string | null>(null);
+    const [erros, setErros] = useState<ErrosEdicao>({});
+    const [salvando, setSalvando] = useState(false);
+
+    /// O GET /usuarios/me traz o e-mail mascarado, por isso a carga vem do GET /usuarios/{id}
+    useEffect(() => {
+        carregarConta(id)
+            .then((dados) => {
+                setConta(dados);
+                setNome(dados.nomeUsuario);
+                setEmail(dados.usuario);
+            })
+            .catch((e: Error) => setErroCarga(e.message));
+    }, [id]);
+
+    const emailMudou = conta !== null && !mesmoEmail(email, conta.usuario);
+    const semMudanca = conta !== null && !emailMudou && nome.trim() === conta.nomeUsuario.trim();
+
+    async function salvar(evento: FormEvent) {
+        evento.preventDefault();
+        if (!conta || salvando) return;
+
+        const locais = validarEdicao(nome, email);
+        setErros(locais);
+        if (Object.keys(locais).length > 0) return;
+
+        setSalvando(true);
+        const resultado = await atualizarConta({...conta, nomeUsuario: nome, usuario: email});
+        setSalvando(false);
+
+        if (!resultado.ok) {
+            setErros(resultado.erros);
+            return;
+        }
+
+        /// O e-mail é o login: com ele trocado, o acesso atual deixa de valer
+        if (!mesmoEmail(resultado.conta.usuario, conta.usuario)) {
+            sair();
+            deixarAvisoLogin("E-mail alterado. Entre novamente com o novo e-mail.");
+            navigate("/login", {replace: true});
+            return;
+        }
+
+        atualizarUsuarioSalvo({nome: resultado.conta.nomeUsuario});
+        onSalvo(resultado.conta.nomeUsuario);
+    }
+
+    return (
+        <div className={s.painelAvatar}>
+            <p className={s.painelAvatarTitulo}>Editar dados</p>
+
+            {erroCarga && <p className={s.textoErro}>{erroCarga}</p>}
+            {!conta && !erroCarga && <p className={s.vazio}>Carregando...</p>}
+
+            {conta && (
+                <form onSubmit={salvar} className={s.form} noValidate>
+                    <div>
+                        <label htmlFor="editar-nome" className={s.label}>Nome</label>
+                        <input id="editar-nome" className={s.input} value={nome} maxLength={LIMITE_NOME}
+                               autoComplete="name" onChange={(e) => {
+                                   setNome(e.target.value);
+                                   setErros({...erros, nomeUsuario: undefined});
+                               }}/>
+                        {erros.nomeUsuario && <p className={`mt-1 ${s.textoErro}`}>{erros.nomeUsuario}</p>}
+                    </div>
+
+                    <div>
+                        <label htmlFor="editar-email" className={s.label}>E-mail</label>
+                        <input id="editar-email" type="email" className={s.input} value={email}
+                               autoComplete="email" onChange={(e) => {
+                                   setEmail(e.target.value);
+                                   setErros({...erros, usuario: undefined});
+                               }}/>
+                        {erros.usuario && <p className={`mt-1 ${s.textoErro}`}>{erros.usuario}</p>}
+                        {emailMudou && (
+                            <p className={`mt-1 ${s.avisoTroca}`}>
+                                Confira se digitou certo: os códigos de verificação passam a ir para este e-mail.
+                                Depois de salvar, você vai precisar entrar novamente com ele.
+                            </p>
+                        )}
+                    </div>
+
+                    {erros.geral && <p className={s.textoErro}>{erros.geral}</p>}
+
+                    <div className={s.acoesForm}>
+                        <button type="submit" disabled={salvando || semMudanca} className={s.botaoPrimario}>
+                            {salvando ? "Salvando..." : "Salvar alterações"}
+                        </button>
+                        <button type="button" onClick={onCancelar} disabled={salvando} className={s.botaoSecundario}>
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            )}
+        </div>
     );
 }
 
