@@ -1,0 +1,258 @@
+.page {
+  composes: page from "../components/DocumentoLegal.module.css";
+}
+
+.inner {
+  composes: inner from "../components/DocumentoLegal.module.css";
+}
+
+.topbar {
+  composes: topbar from "../components/DocumentoLegal.module.css";
+}
+
+.topbar .inner {
+  height: auto;
+  min-height: 68px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.brand {
+  composes: brand from "../components/DocumentoLegal.module.css";
+}
+
+.brandName {
+  composes: brandName from "../components/DocumentoLegal.module.css";
+}
+
+.back {
+  composes: back from "../components/DocumentoLegal.module.css";
+}
+
+.back:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header {
+  composes: header from "../components/DocumentoLegal.module.css";
+}
+
+.icon {
+  composes: icon from "../components/DocumentoLegal.module.css";
+}
+
+.eyebrow {
+  composes: eyebrow from "../components/DocumentoLegal.module.css";
+}
+
+.title {
+  composes: title from "../components/DocumentoLegal.module.css";
+}
+
+.subtitle {
+  composes: subtitle from "../components/DocumentoLegal.module.css";
+}
+
+.aviso {
+  composes: aviso from "../components/DocumentoLegal.module.css";
+}
+
+.card {
+  composes: card from "../components/DocumentoLegal.module.css";
+}
+
+.secao + .secao {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--mu-app-glass-border);
+}
+
+.card .secao h2 {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+
+.card .secao h3 {
+  margin: 18px 0 8px;
+}
+
+.vazio {
+  margin: 0;
+  color: var(--mu-app-muted);
+}
+
+.conta {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.campos {
+  margin: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px 24px;
+}
+
+.campos dt {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--mu-app-muted);
+}
+
+.campos dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  color: var(--mu-app-text);
+  word-break: break-word;
+}
+
+.card ul.lista {
+  gap: 10px;
+}
+
+.detalhes {
+  display: block;
+  font-size: 13px;
+  color: var(--mu-app-muted);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabela th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--mu-app-glass-border);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--mu-app-muted);
+}
+
+.tabela td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(var(--mu-veu-rgb), 0.08);
+  vertical-align: top;
+}
+
+.tabela td small {
+  display: block;
+  font-size: 12px;
+  color: var(--mu-app-muted);
+}
+
+.tabela th:first-child,
+.tabela td:first-child {
+  width: 70px;
+  white-space: nowrap;
+}
+
+.sucesso {
+  color: var(--mu-mint);
+  font-weight: 700;
+}
+
+.falha {
+  color: #ff8a8a;
+  font-weight: 700;
+}
+
+.dia + .dia {
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .conta {
+    flex-direction: column;
+  }
+
+  .tabela {
+    font-size: 13px;
+  }
+
+  .tabela th:last-child,
+  .tabela td:last-child {
+    display: none;
+  }
+}
+
+@media print {
+  :global(footer) {
+    display: none !important;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .page {
+    min-height: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .page,
+  .page * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .inner {
+    max-width: none;
+    padding: 0;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 0;
+    border: 0;
+  }
+
+  .secao + .secao,
+  .tabela th,
+  .tabela td {
+    border-color: #ccc !important;
+  }
+
+  .tabela tr,
+  .lista li {
+    break-inside: avoid;
+  }
+
+  .tabela th:last-child,
+  .tabela td:last-child {
+    display: table-cell;
+  }
+
+  .dia h3 {
+    break-after: avoid;
+  }
+}
