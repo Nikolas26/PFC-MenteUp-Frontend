@@ -13,6 +13,7 @@ import {
 import CampoSenha from "../components/CampoSenha";
 import { API_URL, lerErro } from "../services/api";
 import { problemaSenha } from "../services/senha";
+import { useVersoesDocumentos } from "../hooks/useVersoesDocumentos";
 import styles from "./login.module.css";
 import { LogoMarca, LogoNome } from "../components/Logo";
 
@@ -37,6 +38,8 @@ function Cadastro() {
     const [abriuPolitica, setAbriuPolitica] = useState(false);
     const leuDocumentos = abriuTermo && abriuPolitica;
     const [aceitou, setAceitou] = useState(false);
+    /// Versões do Termo e da Política que a pessoa está aceitando
+    const { versoes, erroVersoes, recarregarVersoes } = useVersoesDocumentos();
     /// Professor fica aguardando a aprovação do administrador
     const [solicitacaoEnviada, setSolicitacaoEnviada] = useState(false);
 
@@ -70,6 +73,11 @@ function Cadastro() {
             return;
         }
 
+        if (!versoes) {
+            setErro(erroVersoes || "Aguarde o Termo e a Política carregarem.");
+            return;
+        }
+
         setCarregando(true);
 
         try {
@@ -84,11 +92,23 @@ function Cadastro() {
                     senha,
                     tipoUsuario: perfil,
                     aceitouTermos: aceitou,
+                    termoVersao: versoes.termoVersao,
+                    politicaVersao: versoes.politicaVersao,
                 }),
             });
 
             if (!resposta.ok) {
                 const falha = await lerErro(resposta, "Não foi possível criar a conta.");
+
+                /// Um documento mudou enquanto a pessoa preenchia: precisa ler e aceitar de novo
+                if (resposta.status === 409 && falha.codigo === "DOCUMENTO_ATUALIZADO") {
+                    setAbriuTermo(false);
+                    setAbriuPolitica(false);
+                    setAceitou(false);
+                    await recarregarVersoes();
+                    setErro(falha.mensagem);
+                    return;
+                }
 
                 // Sem corpo de erro, o 400 do cadastro é o e-mail repetido
                 if (resposta.status === 400 && falha.codigo === "ERRO-DESCONHECIDO") {
@@ -323,13 +343,13 @@ function Cadastro() {
                                 </span>
                             </label>
 
-                            {erro && (
+                            {(erro || erroVersoes) && (
                                 <div className={styles.error} role="alert">
-                                    {erro}
+                                    {erro || erroVersoes}
                                 </div>
                             )}
 
-                            <button type="submit" className={styles.primaryButton} disabled={carregando || !aceitou}>
+                            <button type="submit" className={styles.primaryButton} disabled={carregando || !aceitou || !versoes}>
                                 {carregando ? (perfil === "ALUNO" ? "Criando conta..." : "Enviando solicitação...") : textoBotao}
                             </button>
                         </form>

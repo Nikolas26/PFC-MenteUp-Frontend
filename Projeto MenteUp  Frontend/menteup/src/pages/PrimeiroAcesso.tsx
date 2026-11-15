@@ -5,6 +5,7 @@ import { CircleCheck, FileText } from "lucide-react";
 import CampoSenha from "../components/CampoSenha";
 import { API_URL, lerErro } from "../services/api";
 import { problemaSenha } from "../services/senha";
+import { useVersoesDocumentos } from "../hooks/useVersoesDocumentos";
 import styles from "./login.module.css";
 import { LogoMarca, LogoNome } from "../components/Logo";
 
@@ -22,6 +23,8 @@ function PrimeiroAcesso() {
     const [abriuPolitica, setAbriuPolitica] = useState(false);
     const leuDocumentos = abriuTermo && abriuPolitica;
     const [aceitou, setAceitou] = useState(false);
+    /// Versões do Termo e da Política que a pessoa está aceitando
+    const { versoes, erroVersoes, recarregarVersoes } = useVersoesDocumentos();
     const [novaSenha, setNovaSenha] = useState("");
     const [confirmacao, setConfirmacao] = useState("");
     const [erro, setErro] = useState("");
@@ -51,13 +54,24 @@ function PrimeiroAcesso() {
             return;
         }
 
+        if (!versoes) {
+            setErro(erroVersoes || "Aguarde o Termo e a Política carregarem.");
+            return;
+        }
+
         setCarregando(true);
 
         try {
             const resposta = await fetch(`${API_URL}/usuarios/senha/primeiro-acesso`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token, novaSenha, aceitouTermos: aceitou }),
+                body: JSON.stringify({
+                    token,
+                    novaSenha,
+                    aceitouTermos: aceitou,
+                    termoVersao: versoes.termoVersao,
+                    politicaVersao: versoes.politicaVersao,
+                }),
             });
 
             if (!resposta.ok) {
@@ -65,6 +79,13 @@ function PrimeiroAcesso() {
 
                 if (falha.codigo === "LINK_INVALIDO") {
                     setLinkInvalido(true);
+                } else if (resposta.status === 409 && falha.codigo === "DOCUMENTO_ATUALIZADO") {
+                    /// Um documento mudou enquanto a pessoa preenchia: precisa ler e aceitar de novo
+                    setAbriuTermo(false);
+                    setAbriuPolitica(false);
+                    setAceitou(false);
+                    await recarregarVersoes();
+                    setErro(falha.mensagem);
                 } else {
                     setErro(falha.mensagem);
                 }
@@ -178,13 +199,13 @@ function PrimeiroAcesso() {
                     autoComplete="new-password"
                 />
 
-                {erro && (
+                {(erro || erroVersoes) && (
                     <div className={styles.error} role="alert">
-                        {erro}
+                        {erro || erroVersoes}
                     </div>
                 )}
 
-                <button type="submit" className={styles.primaryButton} disabled={carregando || !aceitou}>
+                <button type="submit" className={styles.primaryButton} disabled={carregando || !aceitou || !versoes}>
                     {carregando ? "Salvando..." : "Aceitar e criar senha"}
                 </button>
             </form>

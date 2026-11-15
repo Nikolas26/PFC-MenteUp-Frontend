@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
     BookOpen,
@@ -10,6 +10,7 @@ import CampoSenha from "../components/CampoSenha";
 import styles from "./login.module.css";
 import { API_URL, lerErro } from "../services/api";
 import { LogoMarca, LogoNome } from "../components/Logo";
+import { apagarAvisoLogin, lerAvisoLogin, salvarLogin } from "../services/usuarioLogado";
 
 function Login() {
     const navigate = useNavigate();
@@ -20,6 +21,12 @@ function Login() {
         | { contaCriada?: boolean; email?: string }
         | null;
     const [contaCriada, setContaCriada] = useState(vindoDoCadastro?.contaCriada === true);
+    /// Recado de quem chegou aqui por ter trocado a senha ou por ter a sessão encerrada
+    const [aviso, setAviso] = useState(lerAvisoLogin);
+
+    useEffect(() => {
+        apagarAvisoLogin();
+    }, []);
 
     const [email, setEmail] = useState(vindoDoCadastro?.email ?? "");
     const [senha, setSenha] = useState("");
@@ -36,6 +43,7 @@ function Login() {
         setErro("");
         setCodigoErro("");
         setContaCriada(false);
+        setAviso("");
 
         // Aceita o e-mail com espaços sobrando (copiado e colado, teclado do celular)
         const emailLimpo = email.trim();
@@ -93,25 +101,15 @@ function Login() {
 
             sessionStorage.removeItem("email2FA");
 
-            localStorage.setItem("token", dados.token);
+            /// Leva para o painel ou para a tela de aceite, se houver versão nova dos documentos
+            const destino = salvarLogin(dados);
 
-            localStorage.setItem("usuario", JSON.stringify(dados));
-
-            switch (dados.tipoUsuario) {
-                case "ALUNO":
-                    navigate("/aluno/dashboard");
-                    break;
-
-                case "PROFESSOR":
-                    navigate("/professor/dashboard");
-                    break;
-
-                case "ADMINISTRADOR":
-                    navigate("/administrador/dashboard");
-                    break;
-
-                default:
-                    setErro("Tipo de usuário inválido.");
+            if (destino) {
+                navigate(destino);
+            } else {
+                localStorage.removeItem("token");
+                localStorage.removeItem("usuario");
+                setErro("Tipo de usuário inválido.");
             }
         } catch (error) {
             console.error("Erro ao realizar login:", error);
@@ -233,6 +231,12 @@ function Login() {
                             >
                                 Esqueci minha senha
                             </button>
+
+                            {aviso && !erro && (
+                                <div className={styles.success} role="status">
+                                    {aviso}
+                                </div>
+                            )}
 
                             {contaCriada && !erro && (
                                 <div className={styles.success} role="status">

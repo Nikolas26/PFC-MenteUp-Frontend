@@ -10,6 +10,7 @@ const ESPERA_REENVIO_SEGUNDOS = 60;
 const PRECISA_LOGIN = ["SEM_LOGIN_RECENTE", "LIMITE_REENVIO_2FA"];
 import { registrarTokenFCM } from "../firebase/fcmService";
 import { LogoMarca, LogoNome } from "../components/Logo";
+import { salvarLogin } from "../services/usuarioLogado";
 
 function Verificar2FA() {
     const navigate = useNavigate();
@@ -93,31 +94,23 @@ function Verificar2FA() {
         try {
             const resposta = await validar2FA(email, codigo);
 
-            localStorage.setItem("token", resposta.token);
+            /// Leva para o painel ou para a tela de aceite, se houver versão nova dos documentos
+            const destino = salvarLogin(resposta);
 
-            localStorage.setItem(
-                "usuario",
-                JSON.stringify(resposta)
-            );
-            await registrarTokenFCM();
+            if (!destino) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("usuario");
+                setErro("Tipo de usuário inválido.");
+                return;
+            }
+
+            /// As notificações do celular só são ativadas depois que os documentos estiverem aceitos
+            if (destino !== "/novo-aceite") {
+                await registrarTokenFCM();
+            }
 
             sessionStorage.removeItem("email2FA");
-
-            switch (resposta.tipoUsuario) {
-                case "ALUNO":
-                    navigate("/aluno/dashboard");
-                    break;
-                case "PROFESSOR":
-                    navigate("/professor/dashboard");
-                    break;
-                case "ADMINISTRADOR":
-                    navigate("/administrador/dashboard");
-                    break;
-                default:
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("usuario");
-                    setErro("Tipo de usuário inválido.");
-            }
+            navigate(destino);
 
         } catch (error: unknown) {
             setErro(
