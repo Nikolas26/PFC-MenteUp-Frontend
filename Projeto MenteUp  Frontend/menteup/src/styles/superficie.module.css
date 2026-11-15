@@ -1,8 +1,8 @@
 /*
- * Superfície clara: cartões lilás-claro sobre o fundo em gradiente.
+ * Superfície clara: cartões lilás-claro sobre o fundo azul-marinho.
  * Os blocos de cartão usam "composes: clara from ..." e tudo que está dentro
  * deles passa a usar texto roxo-escuro e cores de destaque escurecidas.
- * O que fica direto sobre o gradiente (topo, menu, títulos das páginas) continua claro.
+ * O que fica direto sobre o fundo azul (topo, menu, títulos das páginas) continua claro.
  * Para trocar a cor de todos os cartões, basta mudar --mu-app-glass aqui.
  */
 .clara {
@@ -20,7 +20,6 @@
   --mu-surface: #f3f0ff;
   --mu-surface-soft: #ebe5ff;
   --mu-surface-sunken: #ffffff;
-  --mu-surface-solid: #ffffff;
   --mu-input-bg: #ffffff;
   --mu-border: #ddd6fe;
   --mu-border-input: #d9d0fb;
@@ -36,10 +35,16 @@
   --mu-gold: #a14a07;
   --mu-coral: #c2352a;
   --mu-danger: #c2352a;
-  --mu-success: #047857;
-  --mu-success-on-gradient: #047857;
-  --mu-warning: #c2410c;
-  --mu-info: #0369a1;
+  --mu-silver: #5f6368;
+  --mu-bronze: #8a4b12;
+
+  /* Cores fixas em hexadecimal não mudam aqui: usar sempre as variáveis abaixo */
+  --mu-mint-soft: #0b5f59;
+  --mu-indigo-soft: #3730a3;
+  --mu-coral-soft: #a8201a;
+  --mu-on-mint: #ffffff;
+  --mu-on-coral: #ffffff;
+  --mu-on-gold: #ffffff;
   --mu-error-bg: #fff1f0;
   --mu-error-text: #b42318;
   --mu-badge-bg: #ddd6fe;        /* etiquetas: lilás médio com texto roxo-escuro (8:1) */

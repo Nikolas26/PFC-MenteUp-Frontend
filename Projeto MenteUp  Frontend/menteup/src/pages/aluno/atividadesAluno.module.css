@@ -252,6 +252,7 @@
 
 .primaryButton {
   background: var(--mu-gradient-brand);
+  color: var(--mu-text-on-color);
 }
 
 .primaryButton:hover {

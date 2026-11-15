@@ -46,7 +46,7 @@
   place-items: center;
   border-radius: 14px;
   background: rgba(97, 95, 255, 0.22);
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
 }
 
 .template strong {
@@ -117,7 +117,7 @@
   border: 0;
   border-radius: 10px;
   background: none;
-  color: #ff9b8f;
+  color: var(--mu-coral-soft);
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -244,6 +244,7 @@
 .alternativeCorrect .radio {
   border-color: var(--mu-mint);
   background: var(--mu-mint);
+  color: var(--mu-on-mint);
 }
 
 .iconButton {
@@ -335,8 +336,8 @@
   color: #fff;
 }
 
-.vfIconTrue { background: var(--mu-mint); }
-.vfIconFalse { background: var(--mu-coral); }
+.vfIconTrue { background: var(--mu-mint); color: var(--mu-on-mint); }
+.vfIconFalse { background: var(--mu-coral); color: var(--mu-on-coral); }
 
 .sortList {
   margin: 0;
@@ -465,7 +466,7 @@
 }
 
 .pairLink {
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
 }
 
 .template:focus-visible,

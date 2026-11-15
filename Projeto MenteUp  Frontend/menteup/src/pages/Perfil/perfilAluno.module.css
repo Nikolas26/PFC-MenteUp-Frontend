@@ -85,7 +85,7 @@
 
 .tituloPerigo {
   margin-bottom: 10px;
-  color: #ff9a8f;
+  color: var(--mu-coral-soft);
 }
 
 .identidade {
@@ -263,7 +263,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #5ff0e2;
+  color: var(--mu-mint-soft);
 }
 
 .botaoPrimario,

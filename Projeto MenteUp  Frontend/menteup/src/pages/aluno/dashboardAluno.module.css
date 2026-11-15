@@ -228,10 +228,10 @@
   place-items: center;
 }
 
-.mint { background: rgba(0, 169, 158, 0.25); color: #5ee6dc; }
+.mint { background: rgba(0, 169, 158, 0.25); color: var(--mu-mint-soft); }
 .gold.rowIcon,
 .rowIcon.gold { background: rgba(237, 190, 36, 0.2); color: var(--mu-gold); }
-.coral { background: rgba(235, 100, 86, 0.25); color: #ff9b8f; }
+.coral { background: rgba(235, 100, 86, 0.25); color: var(--mu-coral-soft); }
 
 .rowText {
   flex: 1;
@@ -463,6 +463,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--mu-coral);
+  color: var(--mu-on-coral);
   display: grid;
   place-items: center;
   font-size: 16px;

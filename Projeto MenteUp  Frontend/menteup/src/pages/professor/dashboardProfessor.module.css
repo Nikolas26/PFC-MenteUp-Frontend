@@ -353,7 +353,7 @@ button.attentionItem:hover {
   font-weight: 700;
 }
 
-.statusActive { background: rgba(97, 95, 255, 0.18); color: #8a88ff; }
+.statusActive { background: rgba(97, 95, 255, 0.18); color: var(--mu-indigo-soft); }
 .statusDraft { background: rgba(237, 190, 36, 0.15); color: var(--mu-gold); }
 .statusClosed { background: rgba(195, 212, 224, 0.12); color: var(--mu-app-muted); }
 

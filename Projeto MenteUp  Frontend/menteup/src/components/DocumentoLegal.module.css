@@ -83,7 +83,7 @@
   place-items: center;
   border-radius: 14px;
   background: rgba(97, 95, 255, 0.25);
-  color: #a9a8ff;
+  color: var(--mu-indigo-soft);
 }
 
 .eyebrow {
@@ -142,7 +142,7 @@
   font-family: var(--mu-font-display);
   font-size: 16px;
   font-weight: 700;
-  color: #c9c8ff;
+  color: var(--mu-indigo-soft);
 }
 
 .card p {
@@ -200,7 +200,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -253,7 +253,7 @@
 }
 
 .other a {
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
   font-weight: 700;
   text-decoration: none;
 }

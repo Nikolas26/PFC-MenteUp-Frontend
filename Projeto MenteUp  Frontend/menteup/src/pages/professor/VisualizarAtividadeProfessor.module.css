@@ -129,7 +129,7 @@
   font-weight: 700;
 }
 
-.statusActive { background: rgba(97, 95, 255, 0.2); color: #a5a4ff; }
+.statusActive { background: rgba(97, 95, 255, 0.2); color: var(--mu-indigo-soft); }
 .statusDraft { background: rgba(237, 190, 36, 0.15); color: var(--mu-gold); }
 .statusClosed { background: rgba(195, 212, 224, 0.12); color: var(--mu-app-muted); }
 
@@ -190,7 +190,7 @@
 }
 
 .subject {
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
   font-size: 15px;
   font-weight: 700;
   line-height: 20px;
@@ -235,8 +235,8 @@
   padding: 0 22px;
   border-radius: 13px;
   border: 1px solid var(--mu-indigo);
-  background: linear-gradient(90deg, rgba(54, 82, 255, 0.3) 0%, rgba(124, 58, 237, 0.3) 100%);
-  color: #fff;
+  background: var(--mu-gradient-brand);
+  color: var(--mu-text-on-color);
   font-family: inherit;
   font-size: 15px;
   font-weight: 800;
@@ -245,7 +245,7 @@
 }
 
 .navButton:hover:not(:disabled) {
-  background: var(--mu-gradient-brand);
+  filter: brightness(1.1);
 }
 
 .navButton:disabled {
@@ -316,7 +316,7 @@
 .mint { color: var(--mu-mint); flex-shrink: 0; }
 .gold { color: var(--mu-gold); flex-shrink: 0; }
 .coral { color: var(--mu-coral); }
-.indigo { color: #8a88ff; flex-shrink: 0; }
+.indigo { color: var(--mu-indigo-soft); flex-shrink: 0; }
 
 .primary {
   margin-top: 8px;

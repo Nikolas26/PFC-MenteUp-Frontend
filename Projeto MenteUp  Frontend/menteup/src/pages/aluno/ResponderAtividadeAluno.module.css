@@ -59,7 +59,7 @@
 }
 
 .subject {
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
   font-size: 15px;
   font-weight: 700;
   line-height: 20px;
@@ -70,7 +70,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(97, 95, 255, 0.2);
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
   font-size: 12px;
   font-weight: 700;
 }
@@ -150,8 +150,8 @@
   padding: 0 28px;
   border-radius: 13px;
   border: 1px solid var(--mu-indigo);
-  background: linear-gradient(90deg, rgba(54, 82, 255, 0.3) 0%, rgba(124, 58, 237, 0.3) 100%);
-  color: #fff;
+  background: var(--mu-gradient-brand);
+  color: var(--mu-text-on-color);
   font-family: inherit;
   font-size: 16px;
   font-weight: 800;
@@ -160,7 +160,7 @@
 }
 
 .confirm:hover:not(:disabled) {
-  background: var(--mu-gradient-brand);
+  filter: brightness(1.1);
 }
 
 .confirm:disabled {
@@ -194,7 +194,7 @@
 .mint { color: var(--mu-mint); }
 .gold { color: var(--mu-gold); }
 .coral { color: var(--mu-coral); }
-.indigo { color: #8a88ff; }
+.indigo { color: var(--mu-indigo-soft); }
 
 .resultGrid {
   margin: 12px 0 8px;
