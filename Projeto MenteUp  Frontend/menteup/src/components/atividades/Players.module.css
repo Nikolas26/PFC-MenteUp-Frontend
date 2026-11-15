@@ -99,6 +99,7 @@
 
 .optionCorrect .letter {
   background: var(--mu-mint);
+  color: var(--mu-on-mint);
 }
 
 .option:disabled {
@@ -114,7 +115,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(0, 169, 158, 0.3);
-  color: #7ff0e6;
+  color: var(--mu-mint-soft);
   font-size: 12px;
   font-weight: 800;
 }
@@ -183,8 +184,8 @@
   color: #fff;
 }
 
-.vfIconTrue { background: var(--mu-mint); }
-.vfIconFalse { background: var(--mu-coral); }
+.vfIconTrue { background: var(--mu-mint); color: var(--mu-on-mint); }
+.vfIconFalse { background: var(--mu-coral); color: var(--mu-on-coral); }
 
 .sortList {
   margin: 24px 0 0;

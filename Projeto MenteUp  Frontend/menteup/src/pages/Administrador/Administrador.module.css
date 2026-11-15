@@ -121,7 +121,7 @@
   place-items: center;
   border-radius: 14px;
   background: rgba(97, 95, 255, 0.25);
-  color: #a9a8ff;
+  color: var(--mu-indigo-soft);
 }
 
 .panel {
@@ -270,11 +270,11 @@
   white-space: nowrap;
 }
 
-.corIndigo { color: #8a88ff; }
-.corCoral { color: #ff8f82; }
+.corIndigo { color: var(--mu-indigo-soft); }
+.corCoral { color: var(--mu-coral-soft); }
 .corLilas { color: var(--mu-lilac); }
 .corOuro { color: var(--mu-gold); }
-.corMint { color: #3fd8cc; }
+.corMint { color: var(--mu-mint-soft); }
 
 .acaoCell {
   max-width: 380px;
@@ -314,12 +314,12 @@
 
 .badgeMint {
   background: rgba(0, 169, 158, 0.2);
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
 }
 
 .badgeCoral {
   background: rgba(235, 100, 86, 0.2);
-  color: #ff8f82;
+  color: var(--mu-coral-soft);
 }
 
 .badgeNeutro {
@@ -389,6 +389,7 @@
 .roundPrimary {
   border-color: transparent;
   background: var(--mu-indigo);
+  color: var(--mu-text-on-color);
 }
 
 .roundButton:disabled {
@@ -709,7 +710,7 @@
   border-radius: 14px;
   background: rgba(0, 169, 158, 0.15);
   border: 1px solid rgba(0, 169, 158, 0.45);
-  color: #5ff0e2;
+  color: var(--mu-mint-soft);
   font-size: 14px;
   font-weight: 700;
 }

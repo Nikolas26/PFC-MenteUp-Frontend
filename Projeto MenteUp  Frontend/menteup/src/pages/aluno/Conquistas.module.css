@@ -402,7 +402,7 @@
 
 .circuloAtual {
   background: var(--mu-gold);
-  color: #12134e;
+  color: var(--mu-on-gold);
   box-shadow: 0 0 0 6px rgba(237, 190, 36, 0.25), 0 0 32px rgba(237, 190, 36, 0.35);
 }
 

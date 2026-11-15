@@ -41,7 +41,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -100,8 +100,8 @@
   padding: 0 22px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #615fff, #9b5cff);
-  color: #fff;
+  background: var(--mu-gradient-brand);
+  color: var(--mu-text-on-color);
   font-family: inherit;
   font-size: 15px;
   font-weight: 800;

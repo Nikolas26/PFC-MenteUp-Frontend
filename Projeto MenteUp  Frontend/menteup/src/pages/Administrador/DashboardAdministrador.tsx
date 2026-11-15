@@ -1,11 +1,11 @@
-import { ExternalLink } from "lucide-react";
+    import { ExternalLink } from "lucide-react";
 
 import AdminLayout from "../../components/administrador/AdminLayout";
 import PainelIndicadores from "../../components/PainelIndicadores";
 import styles from "./Administrador.module.css";
 
 // O Grafana continua como painel extra (indicadores gerais lidos pela API /dashboard)
-const GRAFANA_URL = import.meta.env.VITE_GRAFANA_URL ?? "http://localhost:3000";
+const GRAFANA_URL = import.meta.env.VITE_GRAFANA_URL ?? "http://localhost:3001";
 
 // Dashboard do administrador: visão geral de todas as turmas e alunos, com filtros
 function DashboardAdministrador() {

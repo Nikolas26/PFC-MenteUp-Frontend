@@ -132,6 +132,7 @@
   height: 40px;
   border-radius: 50%;
   background: var(--mu-coral);
+  color: var(--mu-on-coral);
   display: grid;
   place-items: center;
   font-family: var(--mu-font-display);

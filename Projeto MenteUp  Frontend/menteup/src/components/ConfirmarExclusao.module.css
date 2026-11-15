@@ -93,6 +93,7 @@
 .cancelButton {
   composes: clara from "../styles/superficie.module.css";
   background: var(--mu-app-glass);
+  color: var(--mu-app-text);
 }
 
 .cancelButton:hover:not(:disabled) {

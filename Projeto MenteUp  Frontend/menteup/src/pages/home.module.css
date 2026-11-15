@@ -373,22 +373,22 @@
 
 .goldSolid {
   background: var(--mu-gold);
-  color: #3b2a00;
+  color: var(--mu-on-gold);
 }
 
 .indigo {
   background: rgba(97, 95, 255, 0.25);
-  color: #a9a8ff;
+  color: var(--mu-indigo-soft);
 }
 
 .coral {
   background: rgba(235, 100, 86, 0.2);
-  color: #ff8f82;
+  color: var(--mu-coral-soft);
 }
 
 .mint {
   background: rgba(0, 169, 158, 0.2);
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
 }
 
 .section {
@@ -499,7 +499,7 @@
   place-items: center;
   border-radius: 50%;
   background: rgba(0, 169, 158, 0.2);
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
 }
 
 .teacherVisual {
@@ -513,7 +513,7 @@
   flex-direction: column;
   gap: 4px;
   padding: 22px;
-  color: #c9c8ff;
+  color: var(--mu-indigo-soft);
 }
 
 .statCard strong {
@@ -532,7 +532,7 @@
 
 .statMint,
 .statMint strong {
-  color: #3fd8cc;
+  color: var(--mu-mint-soft);
 }
 
 .chartCard {

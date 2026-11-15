@@ -131,7 +131,7 @@
 }
 
 .iconTeal { color: var(--mu-teal); flex-shrink: 0; }
-.iconPurple { color: var(--mu-purple); flex-shrink: 0; }
+.iconPurple { color: var(--mu-lilac); flex-shrink: 0; }
 
 .card {
   composes: clara from "../styles/superficie.module.css";

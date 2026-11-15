@@ -191,7 +191,7 @@ select.input option {
   place-items: center;
   border-radius: 18px;
   background: rgba(97, 95, 255, 0.22);
-  color: #8a88ff;
+  color: var(--mu-indigo-soft);
 }
 
 .reviewTitle {
@@ -247,7 +247,7 @@ select.input option {
   border-radius: 14px;
   background: rgba(0, 169, 158, 0.15);
   border: 1px solid rgba(0, 169, 158, 0.45);
-  color: #7ff0e6;
+  color: var(--mu-mint-soft);
   font-size: 14px;
   font-weight: 700;
 }
