@@ -1,9 +1,21 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
-import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, User, UserCheck, UserPlus, Users, X} from "lucide-react";
+import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, Trash2, User, UserCheck, UserPlus, Users, X} from "lucide-react";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import {apiFetch, lerErro} from "../../services/api";
 import styles from "./Administrador.module.css";
 import {RostoUsuario} from "../../components/Avatar";
+import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import CampoSenha, {type EstiloCampoSenha} from "../../components/CampoSenha";
+
+/// Classes do campo de senha dentro do modal de exclusão
+const ESTILO_SENHA: EstiloCampoSenha = {
+    campo: styles.campoSenha,
+    label: styles.rotuloSenha,
+    envoltorio: styles.envoltorioSenha,
+    input: `${styles.campo} ${styles.inputSenha}`,
+    botaoOlho: styles.olhoSenha,
+    ajuda: styles.erroCampo,
+};
 
 const POR_PAGINA = 8;
 
@@ -51,6 +63,17 @@ interface Usuario {
     ultimoAcesso: string | null;
     turmas: string[];
     avatar: string | null;
+    excluido: boolean;
+}
+
+/// O registro continua na listagem com um e-mail técnico
+function contaExcluida(email: string) {
+    return email.endsWith("@menteup.invalid");
+}
+
+/// Administradores e contas já excluídas não podem ser excluídos
+function podeExcluir(u: Usuario) {
+    return u.tipo !== "ADMINISTRADOR" && !u.excluido;
 }
 
 const TIPO: Record<Tipo, { rotulo: string; classe: string; icone: typeof User }> = {
@@ -99,6 +122,101 @@ function BadgeTipo({tipo}: { tipo: Tipo }) {
         <span className={`${styles.badge} ${classe}`}>
             <Icone size={13}/> {rotulo}
         </span>
+    );
+}
+
+/// Confirmação da exclusão com a senha do administrador (DELETE /usuarios/{id})
+function ExcluirUsuario({usuario, onFechar, onExcluido, onDesatualizado}: {
+    usuario: Usuario;
+    onFechar: () => void;
+    onExcluido: () => void;
+    onDesatualizado: (mensagem: string) => void;
+}) {
+    const [senha, setSenha] = useState("");
+    const [excluindo, setExcluindo] = useState(false);
+    const [erroCampo, setErroCampo] = useState("");
+    const [erroGeral, setErroGeral] = useState("");
+
+    async function excluir() {
+        if (excluindo) return;
+        setErroCampo("");
+        setErroGeral("");
+
+        if (!senha.trim()) {
+            setErroCampo("Informe a sua senha para confirmar");
+            return;
+        }
+
+        try {
+            setExcluindo(true);
+            const resposta = await apiFetch(`/usuarios/${usuario.id}`, {
+                method: "DELETE",
+                body: JSON.stringify({senha}),
+            });
+
+            if (resposta.ok) {
+                onExcluido();
+                return;
+            }
+
+            const falha = await lerErro(resposta, "Não foi possível excluir o usuário.");
+            switch (falha.codigo) {
+                case "VALIDACAO_FALHOU":
+                    setErroCampo(falha.campos?.senha ?? falha.mensagem);
+                    break;
+                case "SENHA_INCORRETA":
+                    setErroCampo("Senha incorreta");
+                    setSenha("");
+                    break;
+                /// A lista está desatualizada, então fecha e recarrega
+                case "USUARIO_NAO_ENCONTRADO":
+                case "USUARIO_JA_EXCLUIDO":
+                    onDesatualizado(falha.mensagem);
+                    break;
+                case "ACESSO_NEGADO":
+                case "SOMENTE_ADMINISTRADOR":
+                    setErroGeral("Você não tem permissão para excluir usuários.");
+                    break;
+                default:
+                    setErroGeral(falha.mensagem);
+            }
+        } catch {
+            setErroGeral("Não foi possível conectar ao servidor.");
+        } finally {
+            setExcluindo(false);
+        }
+    }
+
+    return (
+        <ConfirmarExclusao
+            titulo="Excluir usuário?"
+            mensagem={<>
+                A conta de <strong>{usuario.nome}</strong> ({usuario.email}) será excluída. Essa ação é
+                irreversível. Digite a sua senha para confirmar.
+            </>}
+            processando={excluindo}
+            onConfirmar={excluir}
+            onCancelar={onFechar}
+        >
+            {/* /// Enter no campo também confirma */}
+            <div onKeyDown={(e) => e.key === "Enter" && excluir()}>
+                <CampoSenha
+                    id="senha-exclusao"
+                    rotulo="Sua senha de administrador"
+                    valor={senha}
+                    aoMudar={(valor) => {
+                        setSenha(valor);
+                        setErroCampo("");
+                    }}
+                    autoComplete="current-password"
+                    placeholder="Digite sua senha"
+                    ajuda={erroCampo || undefined}
+                    estilo={ESTILO_SENHA}
+                    autoFocus
+                />
+            </div>
+            {erroGeral && <div className={`${styles.error} ${styles.erroModal}`} role="alert">{erroGeral}</div>}
+        </ConfirmarExclusao>
     );
 }
 
@@ -196,6 +314,8 @@ function Usuarios() {
     const [versao, setVersao] = useState(0);
     const [respondendo, setRespondendo] = useState(false);
     const [erroResposta, setErroResposta] = useState("");
+    const [excluindo, setExcluindo] = useState<Usuario | null>(null);
+    const [alerta, setAlerta] = useState("");
 
     function abrirDetalhe(u: Usuario | null) {
         setErroResposta("");
@@ -262,6 +382,7 @@ function Usuarios() {
                     cadastro: u.dataCadastro ?? u.dataCriacao ?? u.criadoEm ?? null,
                     ultimoAcesso: ultimo.get(u.id) ?? null,
                     avatar: u.avatar ?? null,
+                    excluido: contaExcluida(u.usuario),
                     turmas: turmas
                         .filter((t) => t.alunos?.some((a) => a.id === u.id) || t.professor?.id === u.id)
                         .map((t) => t.nome),
@@ -301,9 +422,11 @@ function Usuarios() {
     const inicio = filtrados.length ? paginaAtual * POR_PAGINA + 1 : 0;
     const fim = paginaAtual * POR_PAGINA + visiveis.length;
 
-    const contar = (tipo: Tipo) => usuarios.filter((u) => u.tipo === tipo && liberado(u)).length;
+    /// Contas excluídas ficam fora dos totais
+    const ativos = usuarios.filter((u) => !u.excluido);
+    const contar = (tipo: Tipo) => ativos.filter((u) => u.tipo === tipo && liberado(u)).length;
     const resumo = [
-        {valor: usuarios.length, rotulo: "Usuários cadastrados", icone: <Users size={22}/>, cor: styles.corLilas},
+        {valor: ativos.length, rotulo: "Usuários cadastrados", icone: <Users size={22}/>, cor: styles.corLilas},
         {valor: contar("ALUNO"), rotulo: "Alunos", icone: <User size={22}/>, cor: styles.corMint},
         {valor: contar("PROFESSOR"), rotulo: "Professores", icone: <GraduationCap size={22}/>, cor: styles.corOuro},
         {valor: contar("ADMINISTRADOR"), rotulo: "Administradores", icone: <ShieldCheck size={22}/>, cor: styles.corCoral},
@@ -347,6 +470,7 @@ function Usuarios() {
             </header>
 
             {aviso && <div className={styles.sucesso} role="status">{aviso}</div>}
+            {alerta && <div className={styles.error} role="alert">{alerta}</div>}
 
             <div className={styles.summary}>
                 {resumo.map((item) => (
@@ -392,7 +516,7 @@ function Usuarios() {
                                 <th>E-mail</th>
                                 <th>Tipo de usuário</th>
                                 <th>Último acesso</th>
-                                <th aria-label="Mais informações"/>
+                                <th aria-label="Ações"/>
                             </tr>
                         </thead>
                         <tbody>
@@ -415,18 +539,38 @@ function Usuarios() {
                                         </span>
                                     </td>
                                     <td className={styles.muted}>{u.email}</td>
-                                    <td><BadgeTipo tipo={u.tipo}/> <BadgeStatus status={u.statusCadastro}/></td>
+                                    <td>
+                                        <BadgeTipo tipo={u.tipo}/> <BadgeStatus status={u.statusCadastro}/>
+                                        {u.excluido && <span className={`${styles.badge} ${styles.badgeCoral}`}>Excluído</span>}
+                                    </td>
                                     <td className={`${styles.muted} ${styles.nowrap}`}>{formatar(u.ultimoAcesso)}</td>
                                     <td>
-                                        <button
-                                            type="button"
-                                            title="Mais informações"
-                                            aria-label={`Mais informações sobre ${u.nome}`}
-                                            onClick={() => abrirDetalhe(u)}
-                                            className={styles.iconButton}
-                                        >
-                                            <Ellipsis size={18}/>
-                                        </button>
+                                        <span className={styles.acoesLinha}>
+                                            <button
+                                                type="button"
+                                                title="Mais informações"
+                                                aria-label={`Mais informações sobre ${u.nome}`}
+                                                onClick={() => abrirDetalhe(u)}
+                                                className={styles.iconButton}
+                                            >
+                                                <Ellipsis size={18}/>
+                                            </button>
+                                            {podeExcluir(u) && (
+                                                <button
+                                                    type="button"
+                                                    title="Excluir usuário"
+                                                    aria-label={`Excluir ${u.nome}`}
+                                                    onClick={() => {
+                                                        setAviso("");
+                                                        setAlerta("");
+                                                        setExcluindo(u);
+                                                    }}
+                                                    className={`${styles.iconButton} ${styles.iconButtonPerigo}`}
+                                                >
+                                                    <Trash2 size={18}/>
+                                                </button>
+                                            )}
+                                        </span>
                                     </td>
                                 </tr>
                             ))}
@@ -482,7 +626,8 @@ function Usuarios() {
                             <div><dt>E-mail</dt><dd>{detalhe.email}</dd></div>
                             <div><dt>Tipo de usuário</dt><dd>{TIPO[detalhe.tipo].rotulo}</dd></div>
                             <div><dt>Situação</dt><dd>{
-                                detalhe.statusCadastro && detalhe.statusCadastro !== "APROVADA"
+                                detalhe.excluido ? "Conta excluída"
+                                : detalhe.statusCadastro && detalhe.statusCadastro !== "APROVADA"
                                     ? STATUS[detalhe.statusCadastro].situacao
                                     : detalhe.pendente ? "Aguardando primeiro acesso (convite enviado)" : "Ativo"
                             }</dd></div>
@@ -518,6 +663,23 @@ function Usuarios() {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {excluindo && (
+                <ExcluirUsuario
+                    usuario={excluindo}
+                    onFechar={() => setExcluindo(null)}
+                    onExcluido={() => {
+                        setAviso(`A conta de "${excluindo.nome}" foi excluída.`);
+                        setExcluindo(null);
+                        setVersao((atual) => atual + 1);
+                    }}
+                    onDesatualizado={(mensagem) => {
+                        setAlerta(mensagem);
+                        setExcluindo(null);
+                        setVersao((atual) => atual + 1);
+                    }}
+                />
             )}
 
             {novoAberto && (

@@ -4,7 +4,6 @@ import {
     ArrowUp,
     Check,
     CircleCheck,
-    Gamepad2,
     Link2,
     ListOrdered,
     Plus,
@@ -37,16 +36,15 @@ const LIMITE_LACUNAS = 255;
 const LACUNA = /\{\{(\d{1,3})\}\}/g;
 
 interface OpcaoTemplate {
-    tipo: TipoAtividade | "DESAFIO_RAPIDO";
+    tipo: TipoAtividade;
     nome: string;
     descricao: string;
     icone: ReactNode;
-    emBreve?: boolean;
 }
 
+/// Só templates de atividade; o desafio tem fluxo próprio
 const TEMPLATES: OpcaoTemplate[] = [
     { tipo: "QUIZ", nome: "Quiz clássico", descricao: "Múltipla escolha com feedback", icone: <Target size={20} /> },
-    { tipo: "DESAFIO_RAPIDO", nome: "Desafio rápido", descricao: "Perguntas com tempo", icone: <Gamepad2 size={20} />, emBreve: true },
     { tipo: "VERDADEIRO_FALSO", nome: "Verdadeiro ou falso", descricao: "Decisão simples e ágil", icone: <CircleCheck size={20} /> },
     { tipo: "ASSOCIACAO", nome: "Associação de colunas", descricao: "Ligar itens correspondentes", icone: <Link2 size={20} /> },
     { tipo: "ORDENACAO", nome: "Ordenação", descricao: "Colocar itens na sequência correta", icone: <ListOrdered size={20} /> },
@@ -187,7 +185,7 @@ export function SeletorTemplate({ valor, onChange, bloqueado }: SeletorTemplateP
         <div className={styles.templates} role="radiogroup" aria-label="Tipo de atividade">
             {TEMPLATES.map((t) => {
                 const ativo = t.tipo === valor;
-                const desabilitado = t.emBreve || (bloqueado && !ativo);
+                const desabilitado = bloqueado && !ativo;
                 return (
                     <button
                         key={t.tipo}
@@ -196,12 +194,11 @@ export function SeletorTemplate({ valor, onChange, bloqueado }: SeletorTemplateP
                         aria-checked={ativo}
                         disabled={desabilitado}
                         className={`${styles.template} ${ativo ? styles.templateActive : ""}`}
-                        onClick={() => t.tipo !== "DESAFIO_RAPIDO" && onChange(t.tipo)}
+                        onClick={() => onChange(t.tipo)}
                     >
                         <span className={styles.templateIcon}>{t.icone}</span>
                         <strong>{t.nome}</strong>
                         <span>{t.descricao}</span>
-                        {t.emBreve && <span className={styles.soon}>Em breve</span>}
                     </button>
                 );
             })}
