@@ -1,0 +1,157 @@
+.carregando {
+  color: var(--mu-app-muted);
+}
+
+.documento {
+  margin: 0 0 20px;
+  padding: 24px 28px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: var(--mu-radius-2xl);
+  background: var(--mu-app-glass);
+  box-shadow: var(--mu-app-shadow);
+}
+
+.nomeDocumento {
+  margin: 0;
+  font-family: var(--mu-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mu-app-text);
+}
+
+.resumo {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-left: 3px solid var(--mu-mint);
+  border-radius: 8px;
+  background: rgba(var(--mu-veu-rgb), 0.06);
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(var(--mu-veu-rgb), 0.88);
+}
+
+.resumo strong {
+  color: var(--mu-app-text);
+}
+
+.alternar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3fd8cc;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.alternar:hover {
+  text-decoration: underline;
+}
+
+.texto {
+  margin-top: 16px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.confirmacao {
+  margin: 8px 0 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.marcar {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--mu-app-text);
+  cursor: pointer;
+}
+
+.marcar input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--mu-teal);
+}
+
+.marcar small {
+  display: block;
+  font-size: 12px;
+  color: var(--mu-app-muted);
+}
+
+.bloqueado {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.principal {
+  height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #615fff, #9b5cff);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.principal:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.alternativas {
+  padding-top: 24px;
+  border-top: 1px solid var(--mu-app-glass-border);
+  font-size: 14px;
+  color: var(--mu-app-muted);
+}
+
+.alternativas p {
+  margin: 0 0 12px;
+}
+
+.botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.botoes button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.exclusao {
+  margin-top: 20px;
+}
+
+.alternar:focus-visible,
+.principal:focus-visible,
+.marcar input:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .documento {
+    padding: 20px;
+  }
+
+  .principal {
+    width: 100%;
+  }
+}

@@ -1,6 +1,6 @@
 import {createContext, useContext, useEffect, useState, type FormEvent, type ReactNode} from "react";
 import {useNavigate} from "react-router-dom";
-import {KeyRound, Mail, ShieldAlert, Users} from "lucide-react";
+import {Download, FileCheck, KeyRound, Mail, ShieldAlert, Users} from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProfessorLayout from "../../components/professor/ProfessorLayout";
 import AdminLayout from "../../components/administrador/AdminLayout";
@@ -9,7 +9,8 @@ import CampoSenha, {type EstiloCampoSenha} from "../../components/CampoSenha";
 import {senhaForte} from "../../services/senha";
 import Avatar, {EscolherAvatar} from "../../components/Avatar";
 import {apiFetch, lerErro} from "../../services/api";
-import {sair} from "../../services/usuarioLogado";
+import {deixarAvisoLogin, obterUsuarioLogado, sair} from "../../services/usuarioLogado";
+import {baixarMeusDados, buscarAceites, type SituacaoAceites} from "../../services/documentos";
 import type {Perfil} from "../../services/turmaDesafio";
 import aluno from "./perfilAluno.module.css";
 
@@ -168,6 +169,7 @@ function MeuPerfil({perfil}: { perfil: Perfil }) {
                     <div className={s.conteudo}>
                         <DadosPessoais dados={dados} onAvatarAlterado={(avatar) => setDados({...dados, avatar})}/>
                         <AlterarSenha/>
+                        <Privacidade/>
                         <ExcluirConta administrador={dados.tipoUsuario === "ADMINISTRADOR"}/>
                     </div>
                 )}
@@ -283,12 +285,12 @@ function DadosPessoais({dados, onAvatarAlterado}: {
 // Troca de senha: pede a atual e confirma a nova antes de enviar
 function AlterarSenha() {
     const s = useEstilo();
+    const navigate = useNavigate();
     const [senhaAtual, setSenhaAtual] = useState("");
     const [novaSenha, setNovaSenha] = useState("");
     const [confirmacao, setConfirmacao] = useState("");
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
-    const [sucesso, setSucesso] = useState(false);
 
     // Conferências feitas na tela, antes de chamar a API
     const confirmacaoDiferente = confirmacao !== "" && confirmacao !== novaSenha;
@@ -298,7 +300,6 @@ function AlterarSenha() {
         evento.preventDefault();
         setSalvando(true);
         setErro(null);
-        setSucesso(false);
 
         try {
             const resposta = await apiFetch("/usuarios/me/senha", {
@@ -311,10 +312,10 @@ function AlterarSenha() {
                 return;
             }
 
-            setSucesso(true);
-            setSenhaAtual("");
-            setNovaSenha("");
-            setConfirmacao("");
+            /// Com a senha nova, o acesso antigo deixa de valer: a pessoa entra de novo
+            sair();
+            deixarAvisoLogin("Senha alterada. Entre novamente com a nova senha.");
+            navigate("/login", {replace: true});
         } catch {
             setErro("Não foi possível conectar ao servidor.");
         } finally {
@@ -336,12 +337,90 @@ function AlterarSenha() {
 
                 {confirmacaoDiferente && <p className={s.textoErro}>As senhas não conferem.</p>}
                 {erro && <p className={s.textoErro}>{erro}</p>}
-                {sucesso && <p className={s.textoSucesso}>Senha alterada com sucesso.</p>}
 
                 <button type="submit" disabled={!podeEnviar} className={s.botaoPrimario}>
                     {salvando ? "Salvando..." : "Salvar nova senha"}
                 </button>
             </form>
+        </section>
+    );
+}
+
+/// Mostra "2026-11-20 10:15:00" como "20/11/2026 às 10:15"
+function formatarDataHora(texto: string): string {
+    const [data, hora = ""] = texto.split(/[ T]/);
+    const [ano, mes, dia] = data.split("-");
+    if (!ano || !mes || !dia) return texto;
+    return hora ? `${dia}/${mes}/${ano} às ${hora.slice(0, 5)}` : `${dia}/${mes}/${ano}`;
+}
+
+const NOME_DOCUMENTO: Record<string, string> = {
+    TERMO: "Termo de Aceite",
+    POLITICA: "Política de Privacidade",
+};
+
+/// Baixar os próprios dados e ver quais versões do Termo e da Política foram aceitas
+function Privacidade() {
+    const s = useEstilo();
+    const [situacao, setSituacao] = useState<SituacaoAceites | null>(null);
+    const [erroAceites, setErroAceites] = useState<string | null>(null);
+    const [baixando, setBaixando] = useState(false);
+    const [erroDownload, setErroDownload] = useState<string | null>(null);
+
+    useEffect(() => {
+        buscarAceites()
+            .then(setSituacao)
+            .catch((e: Error) => setErroAceites(e.message));
+    }, []);
+
+    async function baixar() {
+        setBaixando(true);
+        setErroDownload(null);
+
+        try {
+            await baixarMeusDados();
+        } catch (e) {
+            setErroDownload((e as Error).message);
+        } finally {
+            setBaixando(false);
+        }
+    }
+
+    /// Do aceite mais recente para o mais antigo
+    const aceites = [...(situacao?.aceites ?? [])].sort((a, b) => b.aceitoEm.localeCompare(a.aceitoEm));
+
+    return (
+        <section className={s.secao}>
+            <h2 className={s.tituloSecao}><FileCheck size={18}/> Privacidade</h2>
+
+            <p className={s.texto}>
+                Baixe um arquivo com tudo o que o MenteUp guarda sobre você: conta, turmas, atividades,
+                desafios, conquistas e histórico de acessos.
+            </p>
+
+            <button type="button" onClick={baixar} disabled={baixando} className={s.botaoPrimario}>
+                <Download size={16} className="mr-2 inline"/>
+                {baixando ? "Preparando arquivo..." : "Baixar meus dados"}
+            </button>
+            {erroDownload && <p className={`mt-2 ${s.textoErro}`}>{erroDownload}</p>}
+
+            <h3 className={`mt-6 ${s.label}`}>Meus aceites</h3>
+
+            {erroAceites && <p className={s.textoErro}>{erroAceites}</p>}
+            {!situacao && !erroAceites && <p className={s.vazio}>Carregando...</p>}
+            {situacao && aceites.length === 0 && <p className={s.vazio}>Nenhum aceite registrado.</p>}
+
+            {aceites.length > 0 && (
+                <dl className={s.dados}>
+                    {aceites.map((aceite) => (
+                        <div key={`${aceite.tipo}-${aceite.versao}-${aceite.aceitoEm}`}>
+                            <dt className={s.dt}>{NOME_DOCUMENTO[aceite.tipo] ?? aceite.tipo}</dt>
+                            <dd className={s.dd}>Versão {aceite.versao}</dd>
+                            <dd className={s.ddAjuda}>Aceito em {formatarDataHora(aceite.aceitoEm)}</dd>
+                        </div>
+                    ))}
+                </dl>
+            )}
         </section>
     );
 }
@@ -429,6 +508,15 @@ function ExcluirConta({administrador}: { administrador: boolean }) {
 }
 
 export default MeuPerfil;
+
+/// A mesma caixa de exclusão de conta, para usar fora do "Meu perfil"
+export function ExcluirMinhaConta() {
+    return (
+        <EstiloContext.Provider value={ESTILO_ALUNO}>
+            <ExcluirConta administrador={obterUsuarioLogado()?.tipoUsuario === "ADMINISTRADOR"}/>
+        </EstiloContext.Provider>
+    );
+}
 
 // Classes do tema do "Meu perfil" para o campo de senha compartilhado
 function estiloSenha(s: ReturnType<typeof useEstilo>): EstiloCampoSenha {

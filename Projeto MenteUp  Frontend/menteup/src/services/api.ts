@@ -1,3 +1,5 @@
+import { deixarAvisoLogin, sair } from "./usuarioLogado";
+
 export const API_URL = import.meta.env.VITE_API_URL;
 
 export async function apiFetch(
@@ -25,10 +27,16 @@ export async function apiFetch(
     });
 
     if (resposta.status === 401) {
-        console.error("Token inválido ou expirado");
+        const codigo = await codigoDoErro(resposta);
 
-        localStorage.removeItem("token");
-        localStorage.removeItem("usuario");
+        /// Senha atual digitada errada no "Meu perfil": a pessoa continua logada e vê o aviso na tela
+        if (endpoint === "/usuarios/me/senha" && codigo !== "TOKEN_INVALIDO") {
+            return resposta;
+        }
+
+        /// Sessão encerrada: tempo esgotado, senha trocada, conta bloqueada ou excluída
+        sair();
+        deixarAvisoLogin("Sua sessão terminou. Entre novamente para continuar.");
 
         window.location.href = "/login";
 
@@ -43,6 +51,16 @@ export async function apiFetch(
     }
 
     return resposta;
+}
+
+/// Lê o código do erro sem gastar a resposta, que ainda pode ser lida pela tela
+async function codigoDoErro(resposta: Response): Promise<string> {
+    try {
+        const corpo = await resposta.clone().json();
+        return typeof corpo?.codigo === "string" ? corpo.codigo : "";
+    } catch {
+        return "";
+    }
 }
 
 export interface ErroApi {
