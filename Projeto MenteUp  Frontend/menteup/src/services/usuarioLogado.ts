@@ -16,6 +16,12 @@ export function obterUsuarioLogado(): UsuarioLogado | null {
     }
 }
 
+/// Atualiza o usuário salvo no login, para o cabeçalho mostrar o dado novo sem entrar de novo
+export function atualizarUsuarioSalvo(parcial: Partial<UsuarioLogado>) {
+    const atual = obterUsuarioLogado();
+    if (atual) localStorage.setItem("usuario", JSON.stringify({...atual, ...parcial}));
+}
+
 export function idDoUsuario(usuario: UsuarioLogado | null): number | null {
     const id = usuario?.id ?? usuario?.usuarioId ?? Number(localStorage.getItem("usuarioId"));
     return id ? Number(id) : null;

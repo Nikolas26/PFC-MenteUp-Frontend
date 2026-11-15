@@ -1,11 +1,14 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
-import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Search, ShieldCheck, Trash2, User, UserCheck, UserPlus, Users, X} from "lucide-react";
+import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Pencil, Search, ShieldCheck, Trash2, User, UserCheck, UserPlus, Users, X} from "lucide-react";
+import {useNavigate} from "react-router-dom";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import {apiFetch, lerErro} from "../../services/api";
 import styles from "./Administrador.module.css";
 import {RostoUsuario} from "../../components/Avatar";
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
 import CampoSenha, {type EstiloCampoSenha} from "../../components/CampoSenha";
+import {atualizarUsuarioSalvo, deixarAvisoLogin, idDoUsuario, obterUsuarioLogado, sair} from "../../services/usuarioLogado";
+import {atualizarConta, carregarConta, LIMITE_NOME, mesmoEmail, validarEdicao, type ContaEditavel, type ErrosEdicao} from "../../services/edicaoUsuario";
 
 /// Classes do campo de senha dentro do modal de exclusão
 const ESTILO_SENHA: EstiloCampoSenha = {
@@ -74,6 +77,11 @@ function contaExcluida(email: string) {
 /// Administradores e contas já excluídas não podem ser excluídos
 function podeExcluir(u: Usuario) {
     return u.tipo !== "ADMINISTRADOR" && !u.excluido;
+}
+
+/// Outros administradores não podem ser editados por aqui, só a própria conta
+function podeEditar(u: Usuario, meuId: number | null) {
+    return !u.excluido && (u.tipo !== "ADMINISTRADOR" || u.id === meuId);
 }
 
 const TIPO: Record<Tipo, { rotulo: string; classe: string; icone: typeof User }> = {
@@ -220,6 +228,141 @@ function ExcluirUsuario({usuario, onFechar, onExcluido, onDesatualizado}: {
     );
 }
 
+/// Edição de nome, e-mail e tipo pelo administrador (PUT /usuarios/atualizar)
+function EditarUsuario({usuario, propria, onFechar, onSalvo}: {
+    usuario: Usuario;
+    propria: boolean;
+    onFechar: () => void;
+    onSalvo: (conta: ContaEditavel, emailMudou: boolean) => void;
+}) {
+    const [conta, setConta] = useState<ContaEditavel | null>(null);
+    const [nome, setNome] = useState("");
+    const [email, setEmail] = useState("");
+    const [tipo, setTipo] = useState<Tipo>(usuario.tipo);
+    const [erroCarga, setErroCarga] = useState("");
+    const [erros, setErros] = useState<ErrosEdicao>({});
+    const [salvando, setSalvando] = useState(false);
+
+    /// A lista pode estar desatualizada, então os dados vêm do GET /usuarios/{id}
+    useEffect(() => {
+        carregarConta(usuario.id)
+            .then((dados) => {
+                setConta(dados);
+                setNome(dados.nomeUsuario);
+                setEmail(dados.usuario);
+                setTipo(tipoDe(dados.tipoUsuario));
+            })
+            .catch((e: Error) => setErroCarga(e.message));
+    }, [usuario.id]);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && !salvando) onFechar();
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [onFechar, salvando]);
+
+    /// O tipo de uma conta de administrador não pode ser alterado (nem o próprio)
+    const contaAdmin = conta !== null && tipoDe(conta.tipoUsuario) === "ADMINISTRADOR";
+    const tipoEnviado: Tipo = contaAdmin ? "ADMINISTRADOR" : tipo;
+
+    const emailMudou = conta !== null && !mesmoEmail(email, conta.usuario);
+    const semMudanca = conta !== null && !emailMudou && nome.trim() === conta.nomeUsuario.trim()
+        && tipoEnviado === tipoDe(conta.tipoUsuario);
+
+    async function salvar(evento: FormEvent) {
+        evento.preventDefault();
+        if (!conta || salvando) return;
+
+        const locais = validarEdicao(nome, email);
+        setErros(locais);
+        if (Object.keys(locais).length > 0) return;
+
+        setSalvando(true);
+        const resultado = await atualizarConta({...conta, nomeUsuario: nome, usuario: email, tipoUsuario: tipoEnviado});
+        setSalvando(false);
+
+        if (!resultado.ok) {
+            setErros(resultado.erros);
+            return;
+        }
+        onSalvo(resultado.conta, !mesmoEmail(resultado.conta.usuario, conta.usuario));
+    }
+
+    return (
+        <div className={styles.overlay} onClick={() => !salvando && onFechar()}>
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="editar-titulo"
+                 onClick={(e) => e.stopPropagation()}>
+                <button type="button" className={styles.modalClose} onClick={onFechar} disabled={salvando}
+                        aria-label="Fechar">
+                    <X size={18}/>
+                </button>
+                <h2 id="editar-titulo" className={styles.modalTitle}>Editar usuário</h2>
+                <p className={styles.modalSubtitle}>
+                    {propria ? "Seus dados de acesso." : <>Dados de <strong>{usuario.nome}</strong> ({identificador(usuario.id)}).</>}
+                </p>
+
+                {erroCarga && <div className={styles.error} role="alert">{erroCarga}</div>}
+                {!conta && !erroCarga && <p className={styles.muted}>Carregando dados...</p>}
+
+                {conta && (
+                    <form onSubmit={salvar} className={styles.formNovo} noValidate>
+                        <label>Nome
+                            <input className={styles.campo} value={nome} maxLength={LIMITE_NOME} autoComplete="off"
+                                   onChange={(e) => {
+                                       setNome(e.target.value);
+                                       setErros({...erros, nomeUsuario: undefined});
+                                   }}/>
+                            {erros.nomeUsuario && <span className={styles.erroCampo}>{erros.nomeUsuario}</span>}
+                        </label>
+                        <label>E-mail
+                            <input className={styles.campo} type="email" value={email} autoComplete="off"
+                                   onChange={(e) => {
+                                       setEmail(e.target.value);
+                                       setErros({...erros, usuario: undefined});
+                                   }}/>
+                            {erros.usuario && <span className={styles.erroCampo}>{erros.usuario}</span>}
+                        </label>
+                        <label>Tipo de usuário
+                            <select className={styles.select} value={tipoEnviado} disabled={contaAdmin}
+                                    onChange={(e) => {
+                                        setTipo(e.target.value as Tipo);
+                                        setErros({...erros, tipoUsuario: undefined});
+                                    }}>
+                                <option value="ALUNO">Aluno</option>
+                                <option value="PROFESSOR">Professor</option>
+                                <option value="ADMINISTRADOR">Administrador</option>
+                            </select>
+                            {contaAdmin && (
+                                <span className={styles.ajudaCampo}>
+                                    O tipo de uma conta de administrador não pode ser alterado.
+                                </span>
+                            )}
+                            {erros.tipoUsuario && <span className={styles.erroCampo}>{erros.tipoUsuario}</span>}
+                        </label>
+
+                        {emailMudou && (
+                            <div className={styles.avisoTroca} role="status">
+                                {propria
+                                    ? "Depois de salvar, você será desconectado e precisará entrar com o novo e-mail."
+                                    : `${usuario.nome} será desconectado(a) e precisará entrar com o novo e-mail.`}
+                                {" "}Os códigos de verificação passam a ir para o novo endereço: confira se está certo.
+                            </div>
+                        )}
+
+                        {erros.geral && <div className={styles.error} role="alert">{erros.geral}</div>}
+
+                        <button type="submit" className={styles.primaryButton} disabled={salvando || semMudanca}>
+                            <Check size={18}/> {salvando ? "Salvando..." : "Salvar alterações"}
+                        </button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
+
 /*
  * Criação de usuário pelo administrador (POST /usuarios).
  * É o único jeito de criar outro ADMINISTRADOR: o cadastro público aceita só Aluno e Professor.
@@ -302,6 +445,8 @@ function NovoUsuario({onFechar, onCriado}: { onFechar: () => void; onCriado: (me
 }
 
 function Usuarios() {
+    const navigate = useNavigate();
+    const meuId = idDoUsuario(obterUsuarioLogado());
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
@@ -315,6 +460,7 @@ function Usuarios() {
     const [respondendo, setRespondendo] = useState(false);
     const [erroResposta, setErroResposta] = useState("");
     const [excluindo, setExcluindo] = useState<Usuario | null>(null);
+    const [editando, setEditando] = useState<Usuario | null>(null);
     const [alerta, setAlerta] = useState("");
 
     function abrirDetalhe(u: Usuario | null) {
@@ -434,6 +580,27 @@ function Usuarios() {
 
     const pendentes = usuarios.filter((u) => u.statusCadastro === "PENDENTE").length;
     const vendoConcessoes = perfil === FILTRO_SOLICITACOES;
+
+    function edicaoSalva(u: Usuario, conta: ContaEditavel, emailMudou: boolean) {
+        const propria = u.id === meuId;
+
+        /// O e-mail é o login: com ele trocado, o acesso atual deixa de valer
+        if (propria && emailMudou) {
+            sair();
+            deixarAvisoLogin("E-mail alterado. Entre novamente com o novo e-mail.");
+            navigate("/login", {replace: true});
+            return;
+        }
+
+        if (propria) atualizarUsuarioSalvo({nome: conta.nomeUsuario});
+
+        const linha: Usuario = {...u, nome: conta.nomeUsuario, email: conta.usuario, tipo: tipoDe(conta.tipoUsuario)};
+        setUsuarios((lista) => lista.map((item) => (item.id === u.id ? linha : item)));
+        setEditando(null);
+        setAviso(emailMudou
+            ? `Dados de "${linha.nome}" atualizados. Como o e-mail mudou, a pessoa foi desconectada e precisa entrar com ${linha.email}.`
+            : `Dados de "${linha.nome}" atualizados.`);
+    }
 
     function filtrar(acao: () => void) {
         acao();
@@ -555,6 +722,21 @@ function Usuarios() {
                                             >
                                                 <Ellipsis size={18}/>
                                             </button>
+                                            {podeEditar(u, meuId) && (
+                                                <button
+                                                    type="button"
+                                                    title="Editar usuário"
+                                                    aria-label={`Editar ${u.nome}`}
+                                                    onClick={() => {
+                                                        setAviso("");
+                                                        setAlerta("");
+                                                        setEditando(u);
+                                                    }}
+                                                    className={styles.iconButton}
+                                                >
+                                                    <Pencil size={18}/>
+                                                </button>
+                                            )}
                                             {podeExcluir(u) && (
                                                 <button
                                                     type="button"
@@ -679,6 +861,15 @@ function Usuarios() {
                         setExcluindo(null);
                         setVersao((atual) => atual + 1);
                     }}
+                />
+            )}
+
+            {editando && (
+                <EditarUsuario
+                    usuario={editando}
+                    propria={editando.id === meuId}
+                    onFechar={() => setEditando(null)}
+                    onSalvo={(conta, emailMudou) => edicaoSalva(editando, conta, emailMudou)}
                 />
             )}
 
