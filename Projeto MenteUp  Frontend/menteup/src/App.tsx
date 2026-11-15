@@ -43,6 +43,7 @@ import { ouvirNotificacoesFCM } from "./firebase/fcmService";
 import TermoAceite from "./pages/TermoAceite";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import NovoAceite from "./pages/NovoAceite";
+import MeusDados from "./pages/MeusDados";
 import Footer from "./Footer";
 import Desempenho from "./pages/Desempenho/Desempenho.tsx";
 import MeuPerfil from "./pages/Perfil/MeuPerfil.tsx";
@@ -96,6 +97,16 @@ function App() {
                     <Route path="/esqueci-senha" element={<EsqueciSenha />} />
                     <Route path="/redefinir-senha" element={<RedefinirSenha />} />
                     <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
+
+                    {/* MEUS DADOS EM FORMATO DE LEITURA */}
+                    <Route
+                        path="/meus-dados"
+                        element={
+                            <PrivateRoute permitido={["ALUNO", "PROFESSOR", "ADMINISTRADOR"]}>
+                                <MeusDados />
+                            </PrivateRoute>
+                        }
+                    />
 
                     {/* NOVA VERSÃO DO TERMO OU DA POLÍTICA */}
                     <Route

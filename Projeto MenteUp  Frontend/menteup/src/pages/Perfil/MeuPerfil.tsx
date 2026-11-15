@@ -1,6 +1,6 @@
 import {createContext, useContext, useEffect, useState, type FormEvent, type ReactNode} from "react";
 import {useNavigate} from "react-router-dom";
-import {Download, FileCheck, KeyRound, Mail, ShieldAlert, Users} from "lucide-react";
+import {Download, Eye, FileCheck, KeyRound, Mail, ShieldAlert, Users} from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProfessorLayout from "../../components/professor/ProfessorLayout";
 import AdminLayout from "../../components/administrador/AdminLayout";
@@ -362,6 +362,7 @@ const NOME_DOCUMENTO: Record<string, string> = {
 /// Baixar os próprios dados e ver quais versões do Termo e da Política foram aceitas
 function Privacidade() {
     const s = useEstilo();
+    const navigate = useNavigate();
     const [situacao, setSituacao] = useState<SituacaoAceites | null>(null);
     const [erroAceites, setErroAceites] = useState<string | null>(null);
     const [baixando, setBaixando] = useState(false);
@@ -394,14 +395,23 @@ function Privacidade() {
             <h2 className={s.tituloSecao}><FileCheck size={18}/> Privacidade</h2>
 
             <p className={s.texto}>
-                Baixe um arquivo com tudo o que o MenteUp guarda sobre você: conta, turmas, atividades,
+                Veja ou baixe tudo o que o MenteUp guarda sobre você: conta, turmas, atividades,
                 desafios, conquistas e histórico de acessos.
             </p>
 
-            <button type="button" onClick={baixar} disabled={baixando} className={s.botaoPrimario}>
-                <Download size={16} className="mr-2 inline"/>
-                {baixando ? "Preparando arquivo..." : "Baixar meus dados"}
-            </button>
+            <div className="flex flex-wrap gap-3">
+                <button type="button" onClick={() => navigate("/meus-dados")} className={s.botaoPrimario}>
+                    <Eye size={16} className="mr-2 inline"/>
+                    Ver meus dados
+                </button>
+                <button type="button" onClick={baixar} disabled={baixando} className={s.botaoPrimario}>
+                    <Download size={16} className="mr-2 inline"/>
+                    {baixando ? "Preparando arquivo..." : "Baixar arquivo (JSON)"}
+                </button>
+            </div>
+            <p className={`mt-2 ${s.ajuda}`}>
+                O arquivo JSON pode ser lido por outros sistemas. Para ler ou imprimir, use "Ver meus dados".
+            </p>
             {erroDownload && <p className={`mt-2 ${s.textoErro}`}>{erroDownload}</p>}
 
             <h3 className={`mt-6 ${s.label}`}>Meus aceites</h3>
