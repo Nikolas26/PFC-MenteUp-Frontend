@@ -382,8 +382,6 @@ As capturas de tela da versão 1.0.0 ficam na pasta [`docs/evidencias`](docs/evi
 | `08-desafio-ao-vivo.png` | Desafio ao vivo com o ranking |
 | `09-dashboard-professor.png` | Dashboard do professor com os filtros |
 | `10-usuarios-admin.png` | Gestão de usuários pelo administrador |
-| `11-grafana.png` | Dashboard no Grafana Cloud |
-| `12-vercel.png` | Deploy concluído na Vercel |
 
 ---
 
