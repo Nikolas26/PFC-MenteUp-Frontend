@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definicoes_menteup-processos" targetNamespace="https://menteup.umc.br/bpmn" exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_menteup-processos">
+    <bpmn:participant id="Participante_00-cadastro-de-conta" name="MenteUp — Cadastro de conta e aprovação de professor" processRef="Processo_00-cadastro-de-conta" />
+    <bpmn:participant id="Participante_01-acesso-e-recuperacao-de-senha" name="MenteUp — Acesso (2FA), primeiro acesso e recuperação de senha" processRef="Processo_01-acesso-e-recuperacao-de-senha" />
+    <bpmn:participant id="Participante_02-entrada-e-saida-de-turma" name="MenteUp — Turmas: entrada, saída e arquivamento" processRef="Processo_02-entrada-e-saida-de-turma" />
+    <bpmn:participant id="Participante_03-atividade-desempenho-e-conquistas" name="MenteUp — Atividade, desempenho e conquistas" processRef="Processo_03-atividade-desempenho-e-conquistas" />
+    <bpmn:participant id="Participante_04-desafio-ao-vivo" name="MenteUp — Desafio ao vivo" processRef="Processo_04-desafio-ao-vivo" />
+    <bpmn:participant id="Participante_05-monitoramento-dashboard-grafana" name="MenteUp — Painel de indicadores e monitoramento no Grafana" processRef="Processo_05-monitoramento-dashboard-grafana" />
+    <bpmn:participant id="Participante_06-lgpd-dados-pessoais" name="MenteUp — LGPD: cópia dos dados, exclusão da conta e descarte automático" processRef="Processo_06-lgpd-dados-pessoais" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_00-cadastro-de-conta" isExecutable="false">
+    <bpmn:laneSet id="Raias_00-cadastro-de-conta">
+      <bpmn:lane id="R_Visitante_00" name="Visitante (novo aluno ou professor)"><bpmn:flowNodeRef>Inicio_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Dados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Termo_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Aluno_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Aprovado_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Rejeitado_00</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_00" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Dados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>ErroDados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Email_00</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoEmail_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Salvar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Prof_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Pendente_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Aprovar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Rejeitar_00</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Admin_00" name="Administrador"><bpmn:flowNodeRef>Analisar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Aprovar_00</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_00" name="Acessar a página de cadastro"><bpmn:outgoing>Fluxo_1_00</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Dados_00" name="Escolher Aluno ou Professor e informar nome, e-mail e senha"><bpmn:incoming>Fluxo_1_00</bpmn:incoming><bpmn:incoming>Fluxo_6_00</bpmn:incoming><bpmn:incoming>Fluxo_9_00</bpmn:incoming><bpmn:outgoing>Fluxo_2_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Termo_00" name="Abrir o Termo e a Política e marcar o aceite"><bpmn:incoming>Fluxo_2_00</bpmn:incoming><bpmn:outgoing>Fluxo_3_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Dados_00" name="Dados válidos e senha forte?"><bpmn:incoming>Fluxo_3_00</bpmn:incoming><bpmn:outgoing>Fluxo_4_00</bpmn:outgoing><bpmn:outgoing>Fluxo_5_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ErroDados_00" name="Mostrar o erro e os requisitos da senha"><bpmn:incoming>Fluxo_5_00</bpmn:incoming><bpmn:outgoing>Fluxo_6_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Email_00" name="E-mail já cadastrado?"><bpmn:incoming>Fluxo_4_00</bpmn:incoming><bpmn:outgoing>Fluxo_7_00</bpmn:outgoing><bpmn:outgoing>Fluxo_8_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoEmail_00" name="Avisar que o e-mail já está cadastrado"><bpmn:incoming>Fluxo_8_00</bpmn:incoming><bpmn:outgoing>Fluxo_9_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Salvar_00" name="Criptografar a senha (BCrypt), registrar o aceite e salvar"><bpmn:incoming>Fluxo_7_00</bpmn:incoming><bpmn:outgoing>Fluxo_10_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Prof_00" name="É professor?"><bpmn:incoming>Fluxo_10_00</bpmn:incoming><bpmn:outgoing>Fluxo_11_00</bpmn:outgoing><bpmn:outgoing>Fluxo_12_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Aluno_00" name="Conta de aluno criada: seguir para o login"><bpmn:incoming>Fluxo_11_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:serviceTask id="Pendente_00" name="Marcar o cadastro como PENDENTE"><bpmn:incoming>Fluxo_12_00</bpmn:incoming><bpmn:outgoing>Fluxo_13_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Analisar_00" name="Analisar o pedido em Usuários"><bpmn:incoming>Fluxo_13_00</bpmn:incoming><bpmn:outgoing>Fluxo_14_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Aprovar_00" name="Aprovar?"><bpmn:incoming>Fluxo_14_00</bpmn:incoming><bpmn:outgoing>Fluxo_15_00</bpmn:outgoing><bpmn:outgoing>Fluxo_16_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Aprovar_00" name="Marcar APROVADA e avisar o professor por e-mail"><bpmn:incoming>Fluxo_15_00</bpmn:incoming><bpmn:outgoing>Fluxo_17_00</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:sendTask id="Rejeitar_00" name="Marcar REJEITADA e avisar o professor por e-mail"><bpmn:incoming>Fluxo_16_00</bpmn:incoming><bpmn:outgoing>Fluxo_18_00</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:endEvent id="Fim_Aprovado_00" name="Professor liberado para o login"><bpmn:incoming>Fluxo_17_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:endEvent id="Fim_Rejeitado_00" name="Pode enviar um novo pedido"><bpmn:incoming>Fluxo_18_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_00" sourceRef="Inicio_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_2_00" sourceRef="Dados_00" targetRef="Termo_00" />
+    <bpmn:sequenceFlow id="Fluxo_3_00" sourceRef="Termo_00" targetRef="G_Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_4_00" name="Sim" sourceRef="G_Dados_00" targetRef="G_Email_00" />
+    <bpmn:sequenceFlow id="Fluxo_5_00" name="Não" sourceRef="G_Dados_00" targetRef="ErroDados_00" />
+    <bpmn:sequenceFlow id="Fluxo_6_00" sourceRef="ErroDados_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_7_00" name="Não" sourceRef="G_Email_00" targetRef="Salvar_00" />
+    <bpmn:sequenceFlow id="Fluxo_8_00" name="Sim" sourceRef="G_Email_00" targetRef="AvisoEmail_00" />
+    <bpmn:sequenceFlow id="Fluxo_9_00" sourceRef="AvisoEmail_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_10_00" sourceRef="Salvar_00" targetRef="G_Prof_00" />
+    <bpmn:sequenceFlow id="Fluxo_11_00" name="Não" sourceRef="G_Prof_00" targetRef="Fim_Aluno_00" />
+    <bpmn:sequenceFlow id="Fluxo_12_00" name="Sim" sourceRef="G_Prof_00" targetRef="Pendente_00" />
+    <bpmn:sequenceFlow id="Fluxo_13_00" sourceRef="Pendente_00" targetRef="Analisar_00" />
+    <bpmn:sequenceFlow id="Fluxo_14_00" sourceRef="Analisar_00" targetRef="G_Aprovar_00" />
+    <bpmn:sequenceFlow id="Fluxo_15_00" name="Sim" sourceRef="G_Aprovar_00" targetRef="Aprovar_00" />
+    <bpmn:sequenceFlow id="Fluxo_16_00" name="Não" sourceRef="G_Aprovar_00" targetRef="Rejeitar_00" />
+    <bpmn:sequenceFlow id="Fluxo_17_00" sourceRef="Aprovar_00" targetRef="Fim_Aprovado_00" />
+    <bpmn:sequenceFlow id="Fluxo_18_00" sourceRef="Rejeitar_00" targetRef="Fim_Rejeitado_00" />
+    <bpmn:textAnnotation id="Nota_1_00"><bpmn:text>O aceite só é liberado depois de abrir os dois documentos.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_00" sourceRef="Termo_00" targetRef="Nota_1_00" />
+  </bpmn:process>
+  <bpmn:process id="Processo_01-acesso-e-recuperacao-de-senha" isExecutable="false">
+    <bpmn:laneSet id="Raias_01-acesso-e-recuperacao-de-senha">
+      <bpmn:lane id="R_Usuario_01" name="Usuário (aluno, professor ou administrador)"><bpmn:flowNodeRef>Inicio_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Credenciais_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoBloqueio_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Bloq_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoStatus_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Status_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Codigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>NovoAceite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Painel_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Rec_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Esqueci_01</bpmn:flowNodeRef><bpmn:flowNodeRef>NovaSenha_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Recuperada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Convite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>PrimeiroAcesso_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Convite_01</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_01" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Bloqueada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Senha_01</bpmn:flowNodeRef><bpmn:flowNodeRef>SomarErro_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Terceira_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoInvalido_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Bloquear_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Bloqueada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Status_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Enviar2FA_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Codigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>ErroCodigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Token_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Aceite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Limite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Limite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>EnviarLink_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Desbloquear_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Ativar_01</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_01" name="Acessar o MenteUp"><bpmn:outgoing>Fluxo_1_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Credenciais_01" name="Informar e-mail e senha"><bpmn:incoming>Fluxo_1_01</bpmn:incoming><bpmn:incoming>Fluxo_11_01</bpmn:incoming><bpmn:outgoing>Fluxo_2_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Bloqueada_01" name="Conta bloqueada?"><bpmn:incoming>Fluxo_2_01</bpmn:incoming><bpmn:outgoing>Fluxo_3_01</bpmn:outgoing><bpmn:outgoing>Fluxo_4_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoBloqueio_01" name="Avisar conta bloqueada e indicar &quot;Esqueci minha senha&quot;"><bpmn:incoming>Fluxo_4_01</bpmn:incoming><bpmn:outgoing>Fluxo_5_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Bloq_01" name="Seguir para a recuperação"><bpmn:incoming>Fluxo_5_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:exclusiveGateway id="G_Senha_01" name="Senha correta?"><bpmn:incoming>Fluxo_3_01</bpmn:incoming><bpmn:outgoing>Fluxo_6_01</bpmn:outgoing><bpmn:outgoing>Fluxo_7_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="SomarErro_01" name="Somar tentativa errada"><bpmn:incoming>Fluxo_7_01</bpmn:incoming><bpmn:outgoing>Fluxo_8_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Terceira_01" name="3ª tentativa seguida?"><bpmn:incoming>Fluxo_8_01</bpmn:incoming><bpmn:outgoing>Fluxo_9_01</bpmn:outgoing><bpmn:outgoing>Fluxo_10_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoInvalido_01" name="Avisar &quot;e-mail ou senha inválidos&quot;"><bpmn:incoming>Fluxo_9_01</bpmn:incoming><bpmn:outgoing>Fluxo_11_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Bloquear_01" name="Bloquear a conta e encerrar as sessões abertas"><bpmn:incoming>Fluxo_10_01</bpmn:incoming><bpmn:outgoing>Fluxo_12_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Bloqueada_01" name="Conta bloqueada"><bpmn:incoming>Fluxo_12_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:exclusiveGateway id="G_Status_01" name="Professor pendente ou rejeitado?"><bpmn:incoming>Fluxo_6_01</bpmn:incoming><bpmn:outgoing>Fluxo_13_01</bpmn:outgoing><bpmn:outgoing>Fluxo_14_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoStatus_01" name="Avisar &quot;aguardando aprovação&quot; ou &quot;cadastro rejeitado&quot;"><bpmn:incoming>Fluxo_14_01</bpmn:incoming><bpmn:outgoing>Fluxo_15_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Status_01" name="Acesso não liberado"><bpmn:incoming>Fluxo_15_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sendTask id="Enviar2FA_01" name="Enviar o código 2FA por e-mail (5 min, guardado em hash)"><bpmn:incoming>Fluxo_13_01</bpmn:incoming><bpmn:outgoing>Fluxo_16_01</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="Codigo_01" name="Informar o código (pode pedir reenvio: até 3, a cada 60 s)"><bpmn:incoming>Fluxo_16_01</bpmn:incoming><bpmn:incoming>Fluxo_20_01</bpmn:incoming><bpmn:outgoing>Fluxo_17_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Codigo_01" name="Código válido?"><bpmn:incoming>Fluxo_17_01</bpmn:incoming><bpmn:outgoing>Fluxo_18_01</bpmn:outgoing><bpmn:outgoing>Fluxo_19_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ErroCodigo_01" name="Contar o erro (após 5, é preciso pedir novo código)"><bpmn:incoming>Fluxo_19_01</bpmn:incoming><bpmn:outgoing>Fluxo_20_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Token_01" name="Gerar o token JWT e registrar LOGIN no log"><bpmn:incoming>Fluxo_18_01</bpmn:incoming><bpmn:outgoing>Fluxo_21_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Aceite_01" name="Aceitou a versão atual do Termo e da Política?"><bpmn:incoming>Fluxo_21_01</bpmn:incoming><bpmn:outgoing>Fluxo_22_01</bpmn:outgoing><bpmn:outgoing>Fluxo_23_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="NovoAceite_01" name="Ler e aceitar a nova versão"><bpmn:incoming>Fluxo_23_01</bpmn:incoming><bpmn:outgoing>Fluxo_24_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_Painel_01" name="Painel do perfil aberto"><bpmn:incoming>Fluxo_22_01</bpmn:incoming><bpmn:incoming>Fluxo_24_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Rec_01" name="Esqueceu a senha ou teve a conta bloqueada"><bpmn:outgoing>Fluxo_25_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Esqueci_01" name="Pedir &quot;Esqueci minha senha&quot; informando o e-mail"><bpmn:incoming>Fluxo_25_01</bpmn:incoming><bpmn:outgoing>Fluxo_26_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Limite_01" name="Dentro do limite de pedidos (IP e e-mail)?"><bpmn:incoming>Fluxo_26_01</bpmn:incoming><bpmn:outgoing>Fluxo_27_01</bpmn:outgoing><bpmn:outgoing>Fluxo_28_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Limite_01" name="Pedido ignorado"><bpmn:incoming>Fluxo_28_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sendTask id="EnviarLink_01" name="Enviar o link (30 min, uso único); a resposta é igual exista ou não o e-mail"><bpmn:incoming>Fluxo_27_01</bpmn:incoming><bpmn:outgoing>Fluxo_29_01</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="NovaSenha_01" name="Abrir o link e criar uma senha forte"><bpmn:incoming>Fluxo_29_01</bpmn:incoming><bpmn:outgoing>Fluxo_30_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Desbloquear_01" name="Trocar a senha, desbloquear e encerrar as sessões abertas"><bpmn:incoming>Fluxo_30_01</bpmn:incoming><bpmn:outgoing>Fluxo_31_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Recuperada_01" name="Senha redefinida: voltar ao login"><bpmn:incoming>Fluxo_31_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Convite_01" name="Receber o convite criado pelo administrador (72 h)"><bpmn:outgoing>Fluxo_32_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="PrimeiroAcesso_01" name="Definir a senha e aceitar o Termo e a Política"><bpmn:incoming>Fluxo_32_01</bpmn:incoming><bpmn:outgoing>Fluxo_33_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Ativar_01" name="Salvar a senha e registrar o aceite"><bpmn:incoming>Fluxo_33_01</bpmn:incoming><bpmn:outgoing>Fluxo_34_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Convite_01" name="Conta ativada: seguir para o login"><bpmn:incoming>Fluxo_34_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_01" sourceRef="Inicio_01" targetRef="Credenciais_01" />
+    <bpmn:sequenceFlow id="Fluxo_2_01" sourceRef="Credenciais_01" targetRef="G_Bloqueada_01" />
+    <bpmn:sequenceFlow id="Fluxo_3_01" name="Não" sourceRef="G_Bloqueada_01" targetRef="G_Senha_01" />
+    <bpmn:sequenceFlow id="Fluxo_4_01" name="Sim" sourceRef="G_Bloqueada_01" targetRef="AvisoBloqueio_01" />
+    <bpmn:sequenceFlow id="Fluxo_5_01" sourceRef="AvisoBloqueio_01" targetRef="Fim_Bloq_01" />
+    <bpmn:sequenceFlow id="Fluxo_6_01" name="Sim" sourceRef="G_Senha_01" targetRef="G_Status_01" />
+    <bpmn:sequenceFlow id="Fluxo_7_01" name="Não" sourceRef="G_Senha_01" targetRef="SomarErro_01" />
+    <bpmn:sequenceFlow id="Fluxo_8_01" sourceRef="SomarErro_01" targetRef="G_Terceira_01" />
+    <bpmn:sequenceFlow id="Fluxo_9_01" name="Não" sourceRef="G_Terceira_01" targetRef="AvisoInvalido_01" />
+    <bpmn:sequenceFlow id="Fluxo_10_01" name="Sim" sourceRef="G_Terceira_01" targetRef="Bloquear_01" />
+    <bpmn:sequenceFlow id="Fluxo_11_01" sourceRef="AvisoInvalido_01" targetRef="Credenciais_01" />
+    <bpmn:sequenceFlow id="Fluxo_12_01" sourceRef="Bloquear_01" targetRef="Fim_Bloqueada_01" />
+    <bpmn:sequenceFlow id="Fluxo_13_01" name="Não" sourceRef="G_Status_01" targetRef="Enviar2FA_01" />
+    <bpmn:sequenceFlow id="Fluxo_14_01" name="Sim" sourceRef="G_Status_01" targetRef="AvisoStatus_01" />
+    <bpmn:sequenceFlow id="Fluxo_15_01" sourceRef="AvisoStatus_01" targetRef="Fim_Status_01" />
+    <bpmn:sequenceFlow id="Fluxo_16_01" sourceRef="Enviar2FA_01" targetRef="Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_17_01" sourceRef="Codigo_01" targetRef="G_Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_18_01" name="Sim" sourceRef="G_Codigo_01" targetRef="Token_01" />
+    <bpmn:sequenceFlow id="Fluxo_19_01" name="Não" sourceRef="G_Codigo_01" targetRef="ErroCodigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_20_01" sourceRef="ErroCodigo_01" targetRef="Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_21_01" sourceRef="Token_01" targetRef="G_Aceite_01" />
+    <bpmn:sequenceFlow id="Fluxo_22_01" name="Sim" sourceRef="G_Aceite_01" targetRef="Fim_Painel_01" />
+    <bpmn:sequenceFlow id="Fluxo_23_01" name="Não" sourceRef="G_Aceite_01" targetRef="NovoAceite_01" />
+    <bpmn:sequenceFlow id="Fluxo_24_01" sourceRef="NovoAceite_01" targetRef="Fim_Painel_01" />
+    <bpmn:sequenceFlow id="Fluxo_25_01" sourceRef="Inicio_Rec_01" targetRef="Esqueci_01" />
+    <bpmn:sequenceFlow id="Fluxo_26_01" sourceRef="Esqueci_01" targetRef="G_Limite_01" />
+    <bpmn:sequenceFlow id="Fluxo_27_01" name="Sim" sourceRef="G_Limite_01" targetRef="EnviarLink_01" />
+    <bpmn:sequenceFlow id="Fluxo_28_01" name="Não" sourceRef="G_Limite_01" targetRef="Fim_Limite_01" />
+    <bpmn:sequenceFlow id="Fluxo_29_01" sourceRef="EnviarLink_01" targetRef="NovaSenha_01" />
+    <bpmn:sequenceFlow id="Fluxo_30_01" sourceRef="NovaSenha_01" targetRef="Desbloquear_01" />
+    <bpmn:sequenceFlow id="Fluxo_31_01" sourceRef="Desbloquear_01" targetRef="Fim_Recuperada_01" />
+    <bpmn:sequenceFlow id="Fluxo_32_01" sourceRef="Inicio_Convite_01" targetRef="PrimeiroAcesso_01" />
+    <bpmn:sequenceFlow id="Fluxo_33_01" sourceRef="PrimeiroAcesso_01" targetRef="Ativar_01" />
+    <bpmn:sequenceFlow id="Fluxo_34_01" sourceRef="Ativar_01" targetRef="Fim_Convite_01" />
+    <bpmn:textAnnotation id="Nota_1_01"><bpmn:text>Depois de 5 erros o código é bloqueado; o reenvio respeita 60 s e no máximo 3 em 15 min.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_01" sourceRef="Codigo_01" targetRef="Nota_1_01" />
+    <bpmn:textAnnotation id="Nota_2_01"><bpmn:text>Se saiu uma versão nova do Termo ou da Política, a API responde 428 até a pessoa aceitar.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_2_01" sourceRef="NovoAceite_01" targetRef="Nota_2_01" />
+  </bpmn:process>
+  <bpmn:process id="Processo_02-entrada-e-saida-de-turma" isExecutable="false">
+    <bpmn:laneSet id="Raias_02-entrada-e-saida-de-turma">
+      <bpmn:lane id="R_Aluno_02" name="Aluno"><bpmn:flowNodeRef>Inicio_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Escolher_02</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Matriculado_02</bpmn:flowNodeRef><bpmn:flowNodeRef>PedirEntrar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>PedirSair_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Nao_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Atualizada_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Recusado_02</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_02" name="Sistema MenteUp"><bpmn:flowNodeRef>Registrar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Valido_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Recusar409_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Atualizar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>MarcarRecusado_02</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Historico_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Apagar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Explicar_02</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Professor_02" name="Professor da turma ou Administrador"><bpmn:flowNodeRef>Analisar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Aprovar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Gestao_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Criar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Direto_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Excluir_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Arquivar_02</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Gestao_02</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_02" name="Acessar Turmas"><bpmn:outgoing>Fluxo_1_02</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Escolher_02" name="Escolher a turma"><bpmn:incoming>Fluxo_1_02</bpmn:incoming><bpmn:outgoing>Fluxo_2_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Matriculado_02" name="Já está na turma?"><bpmn:incoming>Fluxo_2_02</bpmn:incoming><bpmn:outgoing>Fluxo_3_02</bpmn:outgoing><bpmn:outgoing>Fluxo_4_02</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="PedirEntrar_02" name="Pedir para entrar"><bpmn:incoming>Fluxo_3_02</bpmn:incoming><bpmn:outgoing>Fluxo_5_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="PedirSair_02" name="Pedir para sair"><bpmn:incoming>Fluxo_4_02</bpmn:incoming><bpmn:outgoing>Fluxo_6_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Registrar_02" name="Validar e registrar o pedido PENDENTE"><bpmn:incoming>Fluxo_5_02</bpmn:incoming><bpmn:incoming>Fluxo_6_02</bpmn:incoming><bpmn:outgoing>Fluxo_7_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Valido_02" name="Pedido válido?"><bpmn:incoming>Fluxo_7_02</bpmn:incoming><bpmn:outgoing>Fluxo_8_02</bpmn:outgoing><bpmn:outgoing>Fluxo_9_02</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Recusar409_02" name="Avisar o motivo (pedido aberto, turma arquivada...)"><bpmn:incoming>Fluxo_9_02</bpmn:incoming><bpmn:outgoing>Fluxo_10_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Nao_02" name="Pedido não enviado"><bpmn:incoming>Fluxo_10_02</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Analisar_02" name="Analisar o pedido no detalhe da turma"><bpmn:incoming>Fluxo_8_02</bpmn:incoming><bpmn:outgoing>Fluxo_11_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Aprovar_02" name="Aprovar?"><bpmn:incoming>Fluxo_11_02</bpmn:incoming><bpmn:outgoing>Fluxo_12_02</bpmn:outgoing><bpmn:outgoing>Fluxo_13_02</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Atualizar_02" name="Incluir ou retirar o aluno e registrar no log"><bpmn:incoming>Fluxo_12_02</bpmn:incoming><bpmn:outgoing>Fluxo_14_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="MarcarRecusado_02" name="Marcar o pedido como RECUSADO"><bpmn:incoming>Fluxo_13_02</bpmn:incoming><bpmn:outgoing>Fluxo_15_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Atualizada_02" name="Turma atualizada para o aluno"><bpmn:incoming>Fluxo_14_02</bpmn:incoming></bpmn:endEvent>
+    <bpmn:endEvent id="Fim_Recusado_02" name="Pedido recusado"><bpmn:incoming>Fluxo_15_02</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Gestao_02" name="Gerenciar turmas"><bpmn:outgoing>Fluxo_16_02</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Criar_02" name="Criar a turma (o admin escolhe o professor responsável)"><bpmn:incoming>Fluxo_16_02</bpmn:incoming><bpmn:outgoing>Fluxo_17_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Direto_02" name="Adicionar alunos pelo e-mail ou remover"><bpmn:incoming>Fluxo_17_02</bpmn:incoming><bpmn:outgoing>Fluxo_18_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Excluir_02" name="Pedir para excluir a turma"><bpmn:incoming>Fluxo_18_02</bpmn:incoming><bpmn:outgoing>Fluxo_19_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Historico_02" name="Tem alunos ou histórico?"><bpmn:incoming>Fluxo_19_02</bpmn:incoming><bpmn:outgoing>Fluxo_20_02</bpmn:outgoing><bpmn:outgoing>Fluxo_21_02</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Apagar_02" name="Excluir a turma e registrar no log"><bpmn:incoming>Fluxo_20_02</bpmn:incoming><bpmn:outgoing>Fluxo_24_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Explicar_02" name="Explicar o motivo e oferecer o arquivamento"><bpmn:incoming>Fluxo_21_02</bpmn:incoming><bpmn:outgoing>Fluxo_22_02</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Arquivar_02" name="Arquivar (some das listas, histórico mantido)"><bpmn:incoming>Fluxo_22_02</bpmn:incoming><bpmn:outgoing>Fluxo_23_02</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_Gestao_02" name="Turma organizada"><bpmn:incoming>Fluxo_23_02</bpmn:incoming><bpmn:incoming>Fluxo_24_02</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_02" sourceRef="Inicio_02" targetRef="Escolher_02" />
+    <bpmn:sequenceFlow id="Fluxo_2_02" sourceRef="Escolher_02" targetRef="G_Matriculado_02" />
+    <bpmn:sequenceFlow id="Fluxo_3_02" name="Não" sourceRef="G_Matriculado_02" targetRef="PedirEntrar_02" />
+    <bpmn:sequenceFlow id="Fluxo_4_02" name="Sim" sourceRef="G_Matriculado_02" targetRef="PedirSair_02" />
+    <bpmn:sequenceFlow id="Fluxo_5_02" sourceRef="PedirEntrar_02" targetRef="Registrar_02" />
+    <bpmn:sequenceFlow id="Fluxo_6_02" sourceRef="PedirSair_02" targetRef="Registrar_02" />
+    <bpmn:sequenceFlow id="Fluxo_7_02" sourceRef="Registrar_02" targetRef="G_Valido_02" />
+    <bpmn:sequenceFlow id="Fluxo_8_02" name="Sim" sourceRef="G_Valido_02" targetRef="Analisar_02" />
+    <bpmn:sequenceFlow id="Fluxo_9_02" name="Não" sourceRef="G_Valido_02" targetRef="Recusar409_02" />
+    <bpmn:sequenceFlow id="Fluxo_10_02" sourceRef="Recusar409_02" targetRef="Fim_Nao_02" />
+    <bpmn:sequenceFlow id="Fluxo_11_02" sourceRef="Analisar_02" targetRef="G_Aprovar_02" />
+    <bpmn:sequenceFlow id="Fluxo_12_02" name="Sim" sourceRef="G_Aprovar_02" targetRef="Atualizar_02" />
+    <bpmn:sequenceFlow id="Fluxo_13_02" name="Não" sourceRef="G_Aprovar_02" targetRef="MarcarRecusado_02" />
+    <bpmn:sequenceFlow id="Fluxo_14_02" sourceRef="Atualizar_02" targetRef="Fim_Atualizada_02" />
+    <bpmn:sequenceFlow id="Fluxo_15_02" sourceRef="MarcarRecusado_02" targetRef="Fim_Recusado_02" />
+    <bpmn:sequenceFlow id="Fluxo_16_02" sourceRef="Inicio_Gestao_02" targetRef="Criar_02" />
+    <bpmn:sequenceFlow id="Fluxo_17_02" sourceRef="Criar_02" targetRef="Direto_02" />
+    <bpmn:sequenceFlow id="Fluxo_18_02" sourceRef="Direto_02" targetRef="Excluir_02" />
+    <bpmn:sequenceFlow id="Fluxo_19_02" sourceRef="Excluir_02" targetRef="G_Historico_02" />
+    <bpmn:sequenceFlow id="Fluxo_20_02" name="Não" sourceRef="G_Historico_02" targetRef="Apagar_02" />
+    <bpmn:sequenceFlow id="Fluxo_21_02" name="Sim" sourceRef="G_Historico_02" targetRef="Explicar_02" />
+    <bpmn:sequenceFlow id="Fluxo_22_02" sourceRef="Explicar_02" targetRef="Arquivar_02" />
+    <bpmn:sequenceFlow id="Fluxo_23_02" sourceRef="Arquivar_02" targetRef="Fim_Gestao_02" />
+    <bpmn:sequenceFlow id="Fluxo_24_02" sourceRef="Apagar_02" targetRef="Fim_Gestao_02" />
+    <bpmn:textAnnotation id="Nota_1_02"><bpmn:text>O aluno pode cancelar o pedido enquanto ele estiver PENDENTE.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_02" sourceRef="PedirEntrar_02" targetRef="Nota_1_02" />
+    <bpmn:textAnnotation id="Nota_2_02"><bpmn:text>O professor só gerencia as turmas dele; o administrador, todas.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_2_02" sourceRef="Direto_02" targetRef="Nota_2_02" />
+  </bpmn:process>
+  <bpmn:process id="Processo_03-atividade-desempenho-e-conquistas" isExecutable="false">
+    <bpmn:laneSet id="Raias_03-atividade-desempenho-e-conquistas">
+      <bpmn:lane id="R_Professor_03" name="Professor (ou Administrador)"><bpmn:flowNodeRef>Inicio_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Criar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Negado_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Questoes_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Publicar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Analisar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Comentar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Comentar_03</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_03" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Posse_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Negar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Notificar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Salvar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Todas_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Corrigir_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Conquistas_03</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Conquista_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Ranking_03</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Aluno_03" name="Aluno"><bpmn:flowNodeRef>Responder_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Comemorar_03</bpmn:flowNodeRef><bpmn:flowNodeRef>VerComentario_03</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_03</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_03" name="Planejar atividade"><bpmn:outgoing>Fluxo_1_03</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Criar_03" name="Criar a atividade, escolher o template e a(s) turma(s)"><bpmn:incoming>Fluxo_1_03</bpmn:incoming><bpmn:outgoing>Fluxo_2_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Posse_03" name="As turmas são do professor (ou é admin)?"><bpmn:incoming>Fluxo_2_03</bpmn:incoming><bpmn:outgoing>Fluxo_3_03</bpmn:outgoing><bpmn:outgoing>Fluxo_4_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Negar_03" name="Recusar (403) e registrar ACESSO_NEGADO"><bpmn:incoming>Fluxo_4_03</bpmn:incoming><bpmn:outgoing>Fluxo_5_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Negado_03" name="Atividade não criada"><bpmn:incoming>Fluxo_5_03</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Questoes_03" name="Cadastrar as questões e o gabarito"><bpmn:incoming>Fluxo_3_03</bpmn:incoming><bpmn:outgoing>Fluxo_6_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Publicar_03" name="Publicar para as turmas"><bpmn:incoming>Fluxo_6_03</bpmn:incoming><bpmn:outgoing>Fluxo_7_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:sendTask id="Notificar_03" name="Notificar os alunos (Firebase, quando ligado)"><bpmn:incoming>Fluxo_7_03</bpmn:incoming><bpmn:outgoing>Fluxo_8_03</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="Responder_03" name="Responder as questões"><bpmn:incoming>Fluxo_8_03</bpmn:incoming><bpmn:incoming>Fluxo_11_03</bpmn:incoming><bpmn:outgoing>Fluxo_9_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Salvar_03" name="Salvar o progresso de cada resposta"><bpmn:incoming>Fluxo_9_03</bpmn:incoming><bpmn:outgoing>Fluxo_10_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Todas_03" name="Respondeu todas?"><bpmn:incoming>Fluxo_10_03</bpmn:incoming><bpmn:outgoing>Fluxo_11_03</bpmn:outgoing><bpmn:outgoing>Fluxo_12_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Corrigir_03" name="Corrigir, calcular acertos e pontuação"><bpmn:incoming>Fluxo_12_03</bpmn:incoming><bpmn:outgoing>Fluxo_13_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Conquistas_03" name="Avaliar conquistas, XP e Intensivão"><bpmn:incoming>Fluxo_13_03</bpmn:incoming><bpmn:outgoing>Fluxo_14_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Conquista_03" name="Nova conquista?"><bpmn:incoming>Fluxo_14_03</bpmn:incoming><bpmn:outgoing>Fluxo_15_03</bpmn:outgoing><bpmn:outgoing>Fluxo_16_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Comemorar_03" name="Ver a comemoração da conquista"><bpmn:incoming>Fluxo_15_03</bpmn:incoming><bpmn:outgoing>Fluxo_17_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Ranking_03" name="Atualizar ranking, desempenho e painel"><bpmn:incoming>Fluxo_16_03</bpmn:incoming><bpmn:incoming>Fluxo_17_03</bpmn:incoming><bpmn:outgoing>Fluxo_18_03</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Analisar_03" name="Analisar o desempenho da turma e de cada aluno"><bpmn:incoming>Fluxo_18_03</bpmn:incoming><bpmn:outgoing>Fluxo_19_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Comentar_03" name="Deseja comentar?"><bpmn:incoming>Fluxo_19_03</bpmn:incoming><bpmn:outgoing>Fluxo_20_03</bpmn:outgoing><bpmn:outgoing>Fluxo_21_03</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Comentar_03" name="Escrever comentário no resultado do aluno"><bpmn:incoming>Fluxo_20_03</bpmn:incoming><bpmn:outgoing>Fluxo_22_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="VerComentario_03" name="Ver o resultado e o comentário"><bpmn:incoming>Fluxo_21_03</bpmn:incoming><bpmn:incoming>Fluxo_22_03</bpmn:incoming><bpmn:outgoing>Fluxo_23_03</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_03" name="Ciclo da atividade concluído"><bpmn:incoming>Fluxo_23_03</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_03" sourceRef="Inicio_03" targetRef="Criar_03" />
+    <bpmn:sequenceFlow id="Fluxo_2_03" sourceRef="Criar_03" targetRef="G_Posse_03" />
+    <bpmn:sequenceFlow id="Fluxo_3_03" name="Sim" sourceRef="G_Posse_03" targetRef="Questoes_03" />
+    <bpmn:sequenceFlow id="Fluxo_4_03" name="Não" sourceRef="G_Posse_03" targetRef="Negar_03" />
+    <bpmn:sequenceFlow id="Fluxo_5_03" sourceRef="Negar_03" targetRef="Fim_Negado_03" />
+    <bpmn:sequenceFlow id="Fluxo_6_03" sourceRef="Questoes_03" targetRef="Publicar_03" />
+    <bpmn:sequenceFlow id="Fluxo_7_03" sourceRef="Publicar_03" targetRef="Notificar_03" />
+    <bpmn:sequenceFlow id="Fluxo_8_03" sourceRef="Notificar_03" targetRef="Responder_03" />
+    <bpmn:sequenceFlow id="Fluxo_9_03" sourceRef="Responder_03" targetRef="Salvar_03" />
+    <bpmn:sequenceFlow id="Fluxo_10_03" sourceRef="Salvar_03" targetRef="G_Todas_03" />
+    <bpmn:sequenceFlow id="Fluxo_11_03" name="Não" sourceRef="G_Todas_03" targetRef="Responder_03" />
+    <bpmn:sequenceFlow id="Fluxo_12_03" name="Sim" sourceRef="G_Todas_03" targetRef="Corrigir_03" />
+    <bpmn:sequenceFlow id="Fluxo_13_03" sourceRef="Corrigir_03" targetRef="Conquistas_03" />
+    <bpmn:sequenceFlow id="Fluxo_14_03" sourceRef="Conquistas_03" targetRef="G_Conquista_03" />
+    <bpmn:sequenceFlow id="Fluxo_15_03" name="Sim" sourceRef="G_Conquista_03" targetRef="Comemorar_03" />
+    <bpmn:sequenceFlow id="Fluxo_16_03" name="Não" sourceRef="G_Conquista_03" targetRef="Ranking_03" />
+    <bpmn:sequenceFlow id="Fluxo_17_03" sourceRef="Comemorar_03" targetRef="Ranking_03" />
+    <bpmn:sequenceFlow id="Fluxo_18_03" sourceRef="Ranking_03" targetRef="Analisar_03" />
+    <bpmn:sequenceFlow id="Fluxo_19_03" sourceRef="Analisar_03" targetRef="G_Comentar_03" />
+    <bpmn:sequenceFlow id="Fluxo_20_03" name="Sim" sourceRef="G_Comentar_03" targetRef="Comentar_03" />
+    <bpmn:sequenceFlow id="Fluxo_21_03" name="Não" sourceRef="G_Comentar_03" targetRef="VerComentario_03" />
+    <bpmn:sequenceFlow id="Fluxo_22_03" sourceRef="Comentar_03" targetRef="VerComentario_03" />
+    <bpmn:sequenceFlow id="Fluxo_23_03" sourceRef="VerComentario_03" targetRef="Fim_03" />
+    <bpmn:textAnnotation id="Nota_1_03"><bpmn:text>Templates: Quiz, Verdadeiro ou Falso, Associação, Ordenação e Lacunas.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_03" sourceRef="Criar_03" targetRef="Nota_1_03" />
+  </bpmn:process>
+  <bpmn:process id="Processo_04-desafio-ao-vivo" isExecutable="false">
+    <bpmn:laneSet id="Raias_04-desafio-ao-vivo">
+      <bpmn:lane id="R_Professor_04" name="Professor (ou Administrador)"><bpmn:flowNodeRef>Inicio_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Criar_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Iniciar_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Avancar_04</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_04" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Posse_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Negar_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Negado_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Abrir_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Pontuar_04</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Mais_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Encerrar_04</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Aluno_04" name="Aluno da turma"><bpmn:flowNodeRef>Escolher_04</bpmn:flowNodeRef><bpmn:flowNodeRef>VerRanking_04</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_04</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_04" name="Preparar desafio"><bpmn:outgoing>Fluxo_1_04</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Criar_04" name="Criar o desafio: perguntas, 2 a 4 alternativas e tempo (5 a 300 s)"><bpmn:incoming>Fluxo_1_04</bpmn:incoming><bpmn:outgoing>Fluxo_2_04</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Posse_04" name="Turma ativa e do professor (ou é admin)?"><bpmn:incoming>Fluxo_2_04</bpmn:incoming><bpmn:outgoing>Fluxo_3_04</bpmn:outgoing><bpmn:outgoing>Fluxo_4_04</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Negar_04" name="Recusar e explicar o motivo"><bpmn:incoming>Fluxo_4_04</bpmn:incoming><bpmn:outgoing>Fluxo_5_04</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Negado_04" name="Desafio não criado"><bpmn:incoming>Fluxo_5_04</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Iniciar_04" name="Iniciar o desafio com a turma"><bpmn:incoming>Fluxo_3_04</bpmn:incoming><bpmn:outgoing>Fluxo_6_04</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Abrir_04" name="Mostrar a pergunta e iniciar o cronômetro"><bpmn:incoming>Fluxo_6_04</bpmn:incoming><bpmn:incoming>Fluxo_11_04</bpmn:incoming><bpmn:outgoing>Fluxo_7_04</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Escolher_04" name="Escolher a alternativa antes do tempo acabar"><bpmn:incoming>Fluxo_7_04</bpmn:incoming><bpmn:outgoing>Fluxo_8_04</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Pontuar_04" name="Registrar a resposta e os pontos (certo e rápido vale mais)"><bpmn:incoming>Fluxo_8_04</bpmn:incoming><bpmn:outgoing>Fluxo_9_04</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Avancar_04" name="Avançar para a próxima pergunta"><bpmn:incoming>Fluxo_9_04</bpmn:incoming><bpmn:outgoing>Fluxo_10_04</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Mais_04" name="Há mais perguntas?"><bpmn:incoming>Fluxo_10_04</bpmn:incoming><bpmn:outgoing>Fluxo_11_04</bpmn:outgoing><bpmn:outgoing>Fluxo_12_04</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Encerrar_04" name="Encerrar e calcular o ranking do desafio"><bpmn:incoming>Fluxo_12_04</bpmn:incoming><bpmn:outgoing>Fluxo_13_04</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="VerRanking_04" name="Ver o ranking final"><bpmn:incoming>Fluxo_13_04</bpmn:incoming><bpmn:outgoing>Fluxo_14_04</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_04" name="Desafio encerrado"><bpmn:incoming>Fluxo_14_04</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_04" sourceRef="Inicio_04" targetRef="Criar_04" />
+    <bpmn:sequenceFlow id="Fluxo_2_04" sourceRef="Criar_04" targetRef="G_Posse_04" />
+    <bpmn:sequenceFlow id="Fluxo_3_04" name="Sim" sourceRef="G_Posse_04" targetRef="Iniciar_04" />
+    <bpmn:sequenceFlow id="Fluxo_4_04" name="Não" sourceRef="G_Posse_04" targetRef="Negar_04" />
+    <bpmn:sequenceFlow id="Fluxo_5_04" sourceRef="Negar_04" targetRef="Fim_Negado_04" />
+    <bpmn:sequenceFlow id="Fluxo_6_04" sourceRef="Iniciar_04" targetRef="Abrir_04" />
+    <bpmn:sequenceFlow id="Fluxo_7_04" sourceRef="Abrir_04" targetRef="Escolher_04" />
+    <bpmn:sequenceFlow id="Fluxo_8_04" sourceRef="Escolher_04" targetRef="Pontuar_04" />
+    <bpmn:sequenceFlow id="Fluxo_9_04" sourceRef="Pontuar_04" targetRef="Avancar_04" />
+    <bpmn:sequenceFlow id="Fluxo_10_04" sourceRef="Avancar_04" targetRef="G_Mais_04" />
+    <bpmn:sequenceFlow id="Fluxo_11_04" name="Sim" sourceRef="G_Mais_04" targetRef="Abrir_04" />
+    <bpmn:sequenceFlow id="Fluxo_12_04" name="Não" sourceRef="G_Mais_04" targetRef="Encerrar_04" />
+    <bpmn:sequenceFlow id="Fluxo_13_04" sourceRef="Encerrar_04" targetRef="VerRanking_04" />
+    <bpmn:sequenceFlow id="Fluxo_14_04" sourceRef="VerRanking_04" targetRef="Fim_04" />
+  </bpmn:process>
+  <bpmn:process id="Processo_05-monitoramento-dashboard-grafana" isExecutable="false">
+    <bpmn:laneSet id="Raias_05-monitoramento-dashboard-grafana">
+      <bpmn:lane id="R_Usuario_05" name="Usuário (aluno, professor ou administrador)"><bpmn:flowNodeRef>Inicio_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Filtros_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Mostrar_05</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Admin_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Painel_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Abrir_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Analisar_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_05</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Api_05" name="Back-end MenteUp (API /dashboard)"><bpmn:flowNodeRef>Recortar_05</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Token_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Negar_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Calcular_05</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Grafana_05" name="Grafana Cloud (plugin Infinity)"><bpmn:flowNodeRef>Chamar_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Erro_05</bpmn:flowNodeRef><bpmn:flowNodeRef>Montar_05</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_05" name="Abrir o Painel"><bpmn:outgoing>Fluxo_1_05</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Filtros_05" name="Escolher período, turma e aluno"><bpmn:incoming>Fluxo_1_05</bpmn:incoming><bpmn:outgoing>Fluxo_2_05</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Recortar_05" name="Recortar os dados pelo perfil (aluno: os seus; professor: suas turmas; admin: tudo)"><bpmn:incoming>Fluxo_2_05</bpmn:incoming><bpmn:outgoing>Fluxo_3_05</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Mostrar_05" name="Ver os indicadores e gráficos"><bpmn:incoming>Fluxo_3_05</bpmn:incoming><bpmn:outgoing>Fluxo_4_05</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Admin_05" name="É administrador e quer o Grafana?"><bpmn:incoming>Fluxo_4_05</bpmn:incoming><bpmn:outgoing>Fluxo_5_05</bpmn:outgoing><bpmn:outgoing>Fluxo_6_05</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Painel_05" name="Acompanhamento concluído"><bpmn:incoming>Fluxo_6_05</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Abrir_05" name="Abrir o Grafana pelo botão do painel"><bpmn:incoming>Fluxo_5_05</bpmn:incoming><bpmn:outgoing>Fluxo_7_05</bpmn:outgoing></bpmn:userTask>
+    <bpmn:sendTask id="Chamar_05" name="Chamar a API com o cabeçalho X-Dashboard-Token"><bpmn:incoming>Fluxo_7_05</bpmn:incoming><bpmn:outgoing>Fluxo_8_05</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:exclusiveGateway id="G_Token_05" name="Token válido?"><bpmn:incoming>Fluxo_8_05</bpmn:incoming><bpmn:outgoing>Fluxo_9_05</bpmn:outgoing><bpmn:outgoing>Fluxo_10_05</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Negar_05" name="Responder 401"><bpmn:incoming>Fluxo_10_05</bpmn:incoming><bpmn:outgoing>Fluxo_11_05</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Erro_05" name="Painel com erro"><bpmn:incoming>Fluxo_11_05</bpmn:incoming></bpmn:endEvent>
+    <bpmn:serviceTask id="Calcular_05" name="Calcular os indicadores agregados (sem dados pessoais)"><bpmn:incoming>Fluxo_9_05</bpmn:incoming><bpmn:outgoing>Fluxo_12_05</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Montar_05" name="Montar Big Numbers e gráficos"><bpmn:incoming>Fluxo_12_05</bpmn:incoming><bpmn:outgoing>Fluxo_13_05</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Analisar_05" name="Analisar o uso e o aprendizado da plataforma"><bpmn:incoming>Fluxo_13_05</bpmn:incoming><bpmn:outgoing>Fluxo_14_05</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_05" name="Monitoramento concluído"><bpmn:incoming>Fluxo_14_05</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_05" sourceRef="Inicio_05" targetRef="Filtros_05" />
+    <bpmn:sequenceFlow id="Fluxo_2_05" sourceRef="Filtros_05" targetRef="Recortar_05" />
+    <bpmn:sequenceFlow id="Fluxo_3_05" sourceRef="Recortar_05" targetRef="Mostrar_05" />
+    <bpmn:sequenceFlow id="Fluxo_4_05" sourceRef="Mostrar_05" targetRef="G_Admin_05" />
+    <bpmn:sequenceFlow id="Fluxo_5_05" name="Sim" sourceRef="G_Admin_05" targetRef="Abrir_05" />
+    <bpmn:sequenceFlow id="Fluxo_6_05" name="Não" sourceRef="G_Admin_05" targetRef="Fim_Painel_05" />
+    <bpmn:sequenceFlow id="Fluxo_7_05" sourceRef="Abrir_05" targetRef="Chamar_05" />
+    <bpmn:sequenceFlow id="Fluxo_8_05" sourceRef="Chamar_05" targetRef="G_Token_05" />
+    <bpmn:sequenceFlow id="Fluxo_9_05" name="Sim" sourceRef="G_Token_05" targetRef="Calcular_05" />
+    <bpmn:sequenceFlow id="Fluxo_10_05" name="Não" sourceRef="G_Token_05" targetRef="Negar_05" />
+    <bpmn:sequenceFlow id="Fluxo_11_05" sourceRef="Negar_05" targetRef="Fim_Erro_05" />
+    <bpmn:sequenceFlow id="Fluxo_12_05" sourceRef="Calcular_05" targetRef="Montar_05" />
+    <bpmn:sequenceFlow id="Fluxo_13_05" sourceRef="Montar_05" targetRef="Analisar_05" />
+    <bpmn:sequenceFlow id="Fluxo_14_05" sourceRef="Analisar_05" targetRef="Fim_05" />
+  </bpmn:process>
+  <bpmn:process id="Processo_06-lgpd-dados-pessoais" isExecutable="false">
+    <bpmn:laneSet id="Raias_06-lgpd-dados-pessoais">
+      <bpmn:lane id="R_Usuario_06" name="Usuário (titular dos dados)"><bpmn:flowNodeRef>Inicio_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Pedido_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Baixar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Copia_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Confirmar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoSenha_06</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_06" name="Sistema MenteUp"><bpmn:flowNodeRef>Exportar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Senha_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Anonimizar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Excluida_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Tempo_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Descartar_06</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Algo_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Nada_06</bpmn:flowNodeRef><bpmn:flowNodeRef>LogDescarte_06</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Descarte_06</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_06" name="Abrir &quot;Meus dados&quot;"><bpmn:outgoing>Fluxo_1_06</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:exclusiveGateway id="G_Pedido_06" name="O que deseja?"><bpmn:incoming>Fluxo_1_06</bpmn:incoming><bpmn:outgoing>Fluxo_2_06</bpmn:outgoing><bpmn:outgoing>Fluxo_3_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Exportar_06" name="Montar o arquivo com os dados da pessoa e registrar EXPORTAR_DADOS"><bpmn:incoming>Fluxo_2_06</bpmn:incoming><bpmn:outgoing>Fluxo_4_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Baixar_06" name="Baixar a cópia dos dados"><bpmn:incoming>Fluxo_4_06</bpmn:incoming><bpmn:outgoing>Fluxo_5_06</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_Copia_06" name="Cópia entregue"><bpmn:incoming>Fluxo_5_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Confirmar_06" name="Confirmar a exclusão com a senha"><bpmn:incoming>Fluxo_3_06</bpmn:incoming><bpmn:incoming>Fluxo_9_06</bpmn:incoming><bpmn:outgoing>Fluxo_6_06</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Senha_06" name="Senha correta?"><bpmn:incoming>Fluxo_6_06</bpmn:incoming><bpmn:outgoing>Fluxo_7_06</bpmn:outgoing><bpmn:outgoing>Fluxo_8_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoSenha_06" name="Avisar a senha incorreta"><bpmn:incoming>Fluxo_8_06</bpmn:incoming><bpmn:outgoing>Fluxo_9_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Anonimizar_06" name="Anonimizar a conta, encerrar as sessões e registrar EXCLUIR_PROPRIA_CONTA"><bpmn:incoming>Fluxo_7_06</bpmn:incoming><bpmn:outgoing>Fluxo_10_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Excluida_06" name="Conta excluída"><bpmn:incoming>Fluxo_10_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Tempo_06" name="Todo dia às 3h e ao iniciar a aplicação"><bpmn:outgoing>Fluxo_11_06</bpmn:outgoing><bpmn:timerEventDefinition id="Timer_Inicio_Tempo_06" /></bpmn:startEvent>
+    <bpmn:serviceTask id="Descartar_06" name="Descartar os dados vencidos (prazos do item 8 da Política)"><bpmn:incoming>Fluxo_11_06</bpmn:incoming><bpmn:outgoing>Fluxo_12_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Algo_06" name="Algo foi descartado?"><bpmn:incoming>Fluxo_12_06</bpmn:incoming><bpmn:outgoing>Fluxo_13_06</bpmn:outgoing><bpmn:outgoing>Fluxo_14_06</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Nada_06" name="Nada a descartar"><bpmn:incoming>Fluxo_14_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:serviceTask id="LogDescarte_06" name="Registrar DESCARTAR_DADOS no log"><bpmn:incoming>Fluxo_13_06</bpmn:incoming><bpmn:outgoing>Fluxo_15_06</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Descarte_06" name="Descarte concluído"><bpmn:incoming>Fluxo_15_06</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_06" sourceRef="Inicio_06" targetRef="G_Pedido_06" />
+    <bpmn:sequenceFlow id="Fluxo_2_06" name="Copiar" sourceRef="G_Pedido_06" targetRef="Exportar_06" />
+    <bpmn:sequenceFlow id="Fluxo_3_06" name="Excluir" sourceRef="G_Pedido_06" targetRef="Confirmar_06" />
+    <bpmn:sequenceFlow id="Fluxo_4_06" sourceRef="Exportar_06" targetRef="Baixar_06" />
+    <bpmn:sequenceFlow id="Fluxo_5_06" sourceRef="Baixar_06" targetRef="Fim_Copia_06" />
+    <bpmn:sequenceFlow id="Fluxo_6_06" sourceRef="Confirmar_06" targetRef="G_Senha_06" />
+    <bpmn:sequenceFlow id="Fluxo_7_06" name="Sim" sourceRef="G_Senha_06" targetRef="Anonimizar_06" />
+    <bpmn:sequenceFlow id="Fluxo_8_06" name="Não" sourceRef="G_Senha_06" targetRef="AvisoSenha_06" />
+    <bpmn:sequenceFlow id="Fluxo_9_06" sourceRef="AvisoSenha_06" targetRef="Confirmar_06" />
+    <bpmn:sequenceFlow id="Fluxo_10_06" sourceRef="Anonimizar_06" targetRef="Fim_Excluida_06" />
+    <bpmn:sequenceFlow id="Fluxo_11_06" sourceRef="Inicio_Tempo_06" targetRef="Descartar_06" />
+    <bpmn:sequenceFlow id="Fluxo_12_06" sourceRef="Descartar_06" targetRef="G_Algo_06" />
+    <bpmn:sequenceFlow id="Fluxo_13_06" name="Sim" sourceRef="G_Algo_06" targetRef="LogDescarte_06" />
+    <bpmn:sequenceFlow id="Fluxo_14_06" name="Não" sourceRef="G_Algo_06" targetRef="Fim_Nada_06" />
+    <bpmn:sequenceFlow id="Fluxo_15_06" sourceRef="LogDescarte_06" targetRef="Fim_Descarte_06" />
+    <bpmn:textAnnotation id="Nota_1_06"><bpmn:text>Logs de acesso: 6 meses (Marco Civil). Códigos 2FA: 1 dia. Links: 7 dias. Cadastros rejeitados e convites vencidos: 30 dias. Os aceites não são apagados.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_06" sourceRef="Descartar_06" targetRef="Nota_1_06" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_menteup-processos">
+    <bpmndi:BPMNPlane id="Plano_menteup-processos" bpmnElement="Colaboracao_menteup-processos">
+      <bpmndi:BPMNShape id="Participante_00-cadastro-de-conta_di" bpmnElement="Participante_00-cadastro-de-conta" isHorizontal="true"><dc:Bounds x="120" y="80" width="2320" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Visitante_00_di" bpmnElement="R_Visitante_00" isHorizontal="true"><dc:Bounds x="150" y="80" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_00_di" bpmnElement="R_Sistema_00" isHorizontal="true"><dc:Bounds x="150" y="350" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Admin_00_di" bpmnElement="R_Admin_00" isHorizontal="true"><dc:Bounds x="150" y="620" width="2290" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_00_di" bpmnElement="Inicio_00"><dc:Bounds x="232" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Dados_00_di" bpmnElement="Dados_00"><dc:Bounds x="365" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Termo_00_di" bpmnElement="Termo_00"><dc:Bounds x="550" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Dados_00_di" bpmnElement="G_Dados_00" isMarkerVisible="true"><dc:Bounds x="780" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="662" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErroDados_00_di" bpmnElement="ErroDados_00"><dc:Bounds x="735" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Email_00_di" bpmnElement="G_Email_00" isMarkerVisible="true"><dc:Bounds x="965" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoEmail_00_di" bpmnElement="AvisoEmail_00"><dc:Bounds x="920" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Salvar_00_di" bpmnElement="Salvar_00"><dc:Bounds x="1105" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Prof_00_di" bpmnElement="G_Prof_00" isMarkerVisible="true"><dc:Bounds x="1335" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1217" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Aluno_00_di" bpmnElement="Fim_Aluno_00"><dc:Bounds x="1342" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1384" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pendente_00_di" bpmnElement="Pendente_00"><dc:Bounds x="1475" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_00_di" bpmnElement="Analisar_00"><dc:Bounds x="1660" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aprovar_00_di" bpmnElement="G_Aprovar_00" isMarkerVisible="true"><dc:Bounds x="1890" y="662" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="620" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Aprovar_00_di" bpmnElement="Aprovar_00"><dc:Bounds x="2030" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Rejeitar_00_di" bpmnElement="Rejeitar_00"><dc:Bounds x="2030" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Aprovado_00_di" bpmnElement="Fim_Aprovado_00"><dc:Bounds x="2267" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Rejeitado_00_di" bpmnElement="Fim_Rejeitado_00"><dc:Bounds x="2267" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="262" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_00_di" bpmnElement="Fluxo_1_00"><di:waypoint x="268" y="147" /><di:waypoint x="365" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_00_di" bpmnElement="Fluxo_2_00"><di:waypoint x="505" y="147" /><di:waypoint x="550" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_00_di" bpmnElement="Fluxo_3_00"><di:waypoint x="690" y="147" /><di:waypoint x="735" y="147" /><di:waypoint x="735" y="417" /><di:waypoint x="780" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_00_di" bpmnElement="Fluxo_4_00"><di:waypoint x="830" y="417" /><di:waypoint x="965" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="878" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_00_di" bpmnElement="Fluxo_5_00"><di:waypoint x="805" y="442" /><di:waypoint x="805" y="512" /><bpmndi:BPMNLabel><dc:Bounds x="811" y="470" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_00_di" bpmnElement="Fluxo_6_00"><di:waypoint x="735" y="552" /><di:waypoint x="435" y="552" /><di:waypoint x="435" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_00_di" bpmnElement="Fluxo_7_00"><di:waypoint x="1015" y="417" /><di:waypoint x="1105" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_00_di" bpmnElement="Fluxo_8_00"><di:waypoint x="990" y="442" /><di:waypoint x="990" y="512" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="470" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_00_di" bpmnElement="Fluxo_9_00"><di:waypoint x="990" y="592" /><di:waypoint x="990" y="610" /><di:waypoint x="435" y="610" /><di:waypoint x="435" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_00_di" bpmnElement="Fluxo_10_00"><di:waypoint x="1245" y="417" /><di:waypoint x="1335" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_00_di" bpmnElement="Fluxo_11_00"><di:waypoint x="1360" y="392" /><di:waypoint x="1360" y="165" /><bpmndi:BPMNLabel><dc:Bounds x="1366" y="272" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_00_di" bpmnElement="Fluxo_12_00"><di:waypoint x="1385" y="417" /><di:waypoint x="1475" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1410" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_00_di" bpmnElement="Fluxo_13_00"><di:waypoint x="1615" y="417" /><di:waypoint x="1638" y="417" /><di:waypoint x="1638" y="687" /><di:waypoint x="1660" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_00_di" bpmnElement="Fluxo_14_00"><di:waypoint x="1800" y="687" /><di:waypoint x="1890" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_00_di" bpmnElement="Fluxo_15_00"><di:waypoint x="1915" y="662" /><di:waypoint x="1915" y="417" /><di:waypoint x="2030" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1923" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_00_di" bpmnElement="Fluxo_16_00"><di:waypoint x="1915" y="662" /><di:waypoint x="1915" y="552" /><di:waypoint x="2030" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="1923" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_00_di" bpmnElement="Fluxo_17_00"><di:waypoint x="2170" y="417" /><di:waypoint x="2218" y="417" /><di:waypoint x="2218" y="147" /><di:waypoint x="2267" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_00_di" bpmnElement="Fluxo_18_00"><di:waypoint x="2170" y="552" /><di:waypoint x="2218" y="552" /><di:waypoint x="2218" y="282" /><di:waypoint x="2267" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_00_di" bpmnElement="Nota_1_00"><dc:Bounds x="705" y="45" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_00_di" bpmnElement="Assoc_Nota_1_00"><di:waypoint x="620" y="107" /><di:waypoint x="705" y="71" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_01-acesso-e-recuperacao-de-senha_di" bpmnElement="Participante_01-acesso-e-recuperacao-de-senha" isHorizontal="true"><dc:Bounds x="120" y="815" width="2690" height="810" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_01_di" bpmnElement="R_Usuario_01" isHorizontal="true"><dc:Bounds x="150" y="815" width="2660" height="405" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_01_di" bpmnElement="R_Sistema_01" isHorizontal="true"><dc:Bounds x="150" y="1220" width="2660" height="405" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_01_di" bpmnElement="Inicio_01"><dc:Bounds x="232" y="864" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="904" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Credenciais_01_di" bpmnElement="Credenciais_01"><dc:Bounds x="365" y="842" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Bloqueada_01_di" bpmnElement="G_Bloqueada_01" isMarkerVisible="true"><dc:Bounds x="595" y="1262" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="1220" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoBloqueio_01_di" bpmnElement="AvisoBloqueio_01"><dc:Bounds x="550" y="977" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Bloq_01_di" bpmnElement="Fim_Bloq_01"><dc:Bounds x="787" y="999" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="829" y="997" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Senha_01_di" bpmnElement="G_Senha_01" isMarkerVisible="true"><dc:Bounds x="780" y="1262" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="662" y="1220" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SomarErro_01_di" bpmnElement="SomarErro_01"><dc:Bounds x="735" y="1382" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Terceira_01_di" bpmnElement="G_Terceira_01" isMarkerVisible="true"><dc:Bounds x="965" y="1397" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="1355" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoInvalido_01_di" bpmnElement="AvisoInvalido_01"><dc:Bounds x="920" y="1517" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Bloquear_01_di" bpmnElement="Bloquear_01"><dc:Bounds x="1105" y="1382" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Bloqueada_01_di" bpmnElement="Fim_Bloqueada_01"><dc:Bounds x="1157" y="1539" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1199" y="1537" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Status_01_di" bpmnElement="G_Status_01" isMarkerVisible="true"><dc:Bounds x="965" y="1262" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="1220" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoStatus_01_di" bpmnElement="AvisoStatus_01"><dc:Bounds x="920" y="1112" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Status_01_di" bpmnElement="Fim_Status_01"><dc:Bounds x="1157" y="1134" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1199" y="1132" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Enviar2FA_01_di" bpmnElement="Enviar2FA_01"><dc:Bounds x="1105" y="1247" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Codigo_01_di" bpmnElement="Codigo_01"><dc:Bounds x="1290" y="842" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Codigo_01_di" bpmnElement="G_Codigo_01" isMarkerVisible="true"><dc:Bounds x="1520" y="1262" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="1220" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErroCodigo_01_di" bpmnElement="ErroCodigo_01"><dc:Bounds x="1475" y="1382" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Token_01_di" bpmnElement="Token_01"><dc:Bounds x="1660" y="1247" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aceite_01_di" bpmnElement="G_Aceite_01" isMarkerVisible="true"><dc:Bounds x="1890" y="1262" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="1220" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NovoAceite_01_di" bpmnElement="NovoAceite_01"><dc:Bounds x="1845" y="1112" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Painel_01_di" bpmnElement="Fim_Painel_01"><dc:Bounds x="2082" y="864" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2124" y="862" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Rec_01_di" bpmnElement="Inicio_Rec_01"><dc:Bounds x="1527" y="999" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1485" y="1039" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Esqueci_01_di" bpmnElement="Esqueci_01"><dc:Bounds x="1660" y="977" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Limite_01_di" bpmnElement="G_Limite_01" isMarkerVisible="true"><dc:Bounds x="1890" y="1532" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="1490" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Limite_01_di" bpmnElement="Fim_Limite_01"><dc:Bounds x="1897" y="1404" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="1402" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EnviarLink_01_di" bpmnElement="EnviarLink_01"><dc:Bounds x="2030" y="1517" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NovaSenha_01_di" bpmnElement="NovaSenha_01"><dc:Bounds x="2215" y="977" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Desbloquear_01_di" bpmnElement="Desbloquear_01"><dc:Bounds x="2400" y="1517" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Recuperada_01_di" bpmnElement="Fim_Recuperada_01"><dc:Bounds x="2637" y="999" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2679" y="997" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Convite_01_di" bpmnElement="Inicio_Convite_01"><dc:Bounds x="2267" y="864" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2225" y="904" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PrimeiroAcesso_01_di" bpmnElement="PrimeiroAcesso_01"><dc:Bounds x="2400" y="842" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ativar_01_di" bpmnElement="Ativar_01"><dc:Bounds x="2400" y="1247" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Convite_01_di" bpmnElement="Fim_Convite_01"><dc:Bounds x="2637" y="864" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2679" y="862" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_01_di" bpmnElement="Fluxo_1_01"><di:waypoint x="268" y="882" /><di:waypoint x="365" y="882" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_01_di" bpmnElement="Fluxo_2_01"><di:waypoint x="435" y="922" /><di:waypoint x="435" y="1287" /><di:waypoint x="595" y="1287" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_01_di" bpmnElement="Fluxo_3_01"><di:waypoint x="645" y="1287" /><di:waypoint x="780" y="1287" /><bpmndi:BPMNLabel><dc:Bounds x="692" y="1269" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_01_di" bpmnElement="Fluxo_4_01"><di:waypoint x="620" y="1262" /><di:waypoint x="620" y="1057" /><bpmndi:BPMNLabel><dc:Bounds x="626" y="1152" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_01_di" bpmnElement="Fluxo_5_01"><di:waypoint x="690" y="1017" /><di:waypoint x="787" y="1017" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_01_di" bpmnElement="Fluxo_6_01"><di:waypoint x="830" y="1287" /><di:waypoint x="965" y="1287" /><bpmndi:BPMNLabel><dc:Bounds x="878" y="1269" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_01_di" bpmnElement="Fluxo_7_01"><di:waypoint x="805" y="1312" /><di:waypoint x="805" y="1382" /><bpmndi:BPMNLabel><dc:Bounds x="811" y="1340" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_01_di" bpmnElement="Fluxo_8_01"><di:waypoint x="875" y="1422" /><di:waypoint x="965" y="1422" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_01_di" bpmnElement="Fluxo_9_01"><di:waypoint x="990" y="1447" /><di:waypoint x="990" y="1517" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="1475" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_01_di" bpmnElement="Fluxo_10_01"><di:waypoint x="1015" y="1422" /><di:waypoint x="1105" y="1422" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="1404" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_01_di" bpmnElement="Fluxo_11_01"><di:waypoint x="920" y="1557" /><di:waypoint x="435" y="1557" /><di:waypoint x="435" y="922" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_01_di" bpmnElement="Fluxo_12_01"><di:waypoint x="1175" y="1462" /><di:waypoint x="1175" y="1539" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_01_di" bpmnElement="Fluxo_13_01"><di:waypoint x="1015" y="1287" /><di:waypoint x="1105" y="1287" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="1269" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_01_di" bpmnElement="Fluxo_14_01"><di:waypoint x="990" y="1262" /><di:waypoint x="990" y="1192" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="1220" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_01_di" bpmnElement="Fluxo_15_01"><di:waypoint x="1060" y="1152" /><di:waypoint x="1157" y="1152" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_01_di" bpmnElement="Fluxo_16_01"><di:waypoint x="1245" y="1287" /><di:waypoint x="1268" y="1287" /><di:waypoint x="1268" y="882" /><di:waypoint x="1290" y="882" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_01_di" bpmnElement="Fluxo_17_01"><di:waypoint x="1430" y="882" /><di:waypoint x="1475" y="882" /><di:waypoint x="1475" y="1287" /><di:waypoint x="1520" y="1287" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_01_di" bpmnElement="Fluxo_18_01"><di:waypoint x="1570" y="1287" /><di:waypoint x="1660" y="1287" /><bpmndi:BPMNLabel><dc:Bounds x="1595" y="1269" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_01_di" bpmnElement="Fluxo_19_01"><di:waypoint x="1545" y="1312" /><di:waypoint x="1545" y="1382" /><bpmndi:BPMNLabel><dc:Bounds x="1551" y="1340" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_01_di" bpmnElement="Fluxo_20_01"><di:waypoint x="1475" y="1422" /><di:waypoint x="1360" y="1422" /><di:waypoint x="1360" y="922" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_01_di" bpmnElement="Fluxo_21_01"><di:waypoint x="1800" y="1287" /><di:waypoint x="1890" y="1287" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_22_01_di" bpmnElement="Fluxo_22_01"><di:waypoint x="1940" y="1287" /><di:waypoint x="2011" y="1287" /><di:waypoint x="2011" y="882" /><di:waypoint x="2082" y="882" /><bpmndi:BPMNLabel><dc:Bounds x="2019" y="864" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_23_01_di" bpmnElement="Fluxo_23_01"><di:waypoint x="1915" y="1262" /><di:waypoint x="1915" y="1192" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="1220" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_24_01_di" bpmnElement="Fluxo_24_01"><di:waypoint x="1985" y="1152" /><di:waypoint x="2034" y="1152" /><di:waypoint x="2034" y="882" /><di:waypoint x="2082" y="882" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_25_01_di" bpmnElement="Fluxo_25_01"><di:waypoint x="1563" y="1017" /><di:waypoint x="1660" y="1017" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_26_01_di" bpmnElement="Fluxo_26_01"><di:waypoint x="1800" y="1017" /><di:waypoint x="1845" y="1017" /><di:waypoint x="1845" y="1557" /><di:waypoint x="1890" y="1557" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_27_01_di" bpmnElement="Fluxo_27_01"><di:waypoint x="1940" y="1557" /><di:waypoint x="2030" y="1557" /><bpmndi:BPMNLabel><dc:Bounds x="1965" y="1539" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_28_01_di" bpmnElement="Fluxo_28_01"><di:waypoint x="1915" y="1532" /><di:waypoint x="1915" y="1440" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="1479" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_29_01_di" bpmnElement="Fluxo_29_01"><di:waypoint x="2170" y="1557" /><di:waypoint x="2192" y="1557" /><di:waypoint x="2192" y="1017" /><di:waypoint x="2215" y="1017" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_30_01_di" bpmnElement="Fluxo_30_01"><di:waypoint x="2355" y="1017" /><di:waypoint x="2378" y="1017" /><di:waypoint x="2378" y="1557" /><di:waypoint x="2400" y="1557" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_31_01_di" bpmnElement="Fluxo_31_01"><di:waypoint x="2540" y="1557" /><di:waypoint x="2588" y="1557" /><di:waypoint x="2588" y="1017" /><di:waypoint x="2637" y="1017" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_32_01_di" bpmnElement="Fluxo_32_01"><di:waypoint x="2303" y="882" /><di:waypoint x="2400" y="882" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_33_01_di" bpmnElement="Fluxo_33_01"><di:waypoint x="2470" y="922" /><di:waypoint x="2470" y="1247" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_34_01_di" bpmnElement="Fluxo_34_01"><di:waypoint x="2540" y="1287" /><di:waypoint x="2588" y="1287" /><di:waypoint x="2588" y="882" /><di:waypoint x="2637" y="882" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_01_di" bpmnElement="Nota_1_01"><dc:Bounds x="1445" y="780" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_01_di" bpmnElement="Assoc_Nota_1_01"><di:waypoint x="1360" y="842" /><di:waypoint x="1445" y="806" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_2_01_di" bpmnElement="Nota_2_01"><dc:Bounds x="2000" y="1050" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_2_01_di" bpmnElement="Assoc_Nota_2_01"><di:waypoint x="1915" y="1112" /><di:waypoint x="2000" y="1076" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_02-entrada-e-saida-de-turma_di" bpmnElement="Participante_02-entrada-e-saida-de-turma" isHorizontal="true"><dc:Bounds x="120" y="1685" width="2690" height="810" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_02_di" bpmnElement="R_Aluno_02" isHorizontal="true"><dc:Bounds x="150" y="1685" width="2660" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_02_di" bpmnElement="R_Sistema_02" isHorizontal="true"><dc:Bounds x="150" y="1955" width="2660" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_02_di" bpmnElement="R_Professor_02" isHorizontal="true"><dc:Bounds x="150" y="2225" width="2660" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_02_di" bpmnElement="Inicio_02"><dc:Bounds x="232" y="1734" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="1774" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Escolher_02_di" bpmnElement="Escolher_02"><dc:Bounds x="365" y="1712" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Matriculado_02_di" bpmnElement="G_Matriculado_02" isMarkerVisible="true"><dc:Bounds x="595" y="1727" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="1685" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PedirEntrar_02_di" bpmnElement="PedirEntrar_02"><dc:Bounds x="735" y="1712" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PedirSair_02_di" bpmnElement="PedirSair_02"><dc:Bounds x="735" y="1847" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Registrar_02_di" bpmnElement="Registrar_02"><dc:Bounds x="920" y="1982" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Valido_02_di" bpmnElement="G_Valido_02" isMarkerVisible="true"><dc:Bounds x="1150" y="1997" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1032" y="1955" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Recusar409_02_di" bpmnElement="Recusar409_02"><dc:Bounds x="1105" y="2117" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Nao_02_di" bpmnElement="Fim_Nao_02"><dc:Bounds x="1342" y="1869" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1384" y="1867" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_02_di" bpmnElement="Analisar_02"><dc:Bounds x="1290" y="2252" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aprovar_02_di" bpmnElement="G_Aprovar_02" isMarkerVisible="true"><dc:Bounds x="1520" y="2267" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="2225" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Atualizar_02_di" bpmnElement="Atualizar_02"><dc:Bounds x="1660" y="1982" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="MarcarRecusado_02_di" bpmnElement="MarcarRecusado_02"><dc:Bounds x="1660" y="2117" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Atualizada_02_di" bpmnElement="Fim_Atualizada_02"><dc:Bounds x="1897" y="1734" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="1732" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Recusado_02_di" bpmnElement="Fim_Recusado_02"><dc:Bounds x="1897" y="1869" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="1867" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Gestao_02_di" bpmnElement="Inicio_Gestao_02"><dc:Bounds x="232" y="2409" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="2449" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Criar_02_di" bpmnElement="Criar_02"><dc:Bounds x="365" y="2387" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Direto_02_di" bpmnElement="Direto_02"><dc:Bounds x="550" y="2387" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Excluir_02_di" bpmnElement="Excluir_02"><dc:Bounds x="735" y="2387" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Historico_02_di" bpmnElement="G_Historico_02" isMarkerVisible="true"><dc:Bounds x="2075" y="2132" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1957" y="2090" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Apagar_02_di" bpmnElement="Apagar_02"><dc:Bounds x="2215" y="1982" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Explicar_02_di" bpmnElement="Explicar_02"><dc:Bounds x="2215" y="2117" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Arquivar_02_di" bpmnElement="Arquivar_02"><dc:Bounds x="2400" y="2387" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Gestao_02_di" bpmnElement="Fim_Gestao_02"><dc:Bounds x="2637" y="2409" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2679" y="2407" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_02_di" bpmnElement="Fluxo_1_02"><di:waypoint x="268" y="1752" /><di:waypoint x="365" y="1752" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_02_di" bpmnElement="Fluxo_2_02"><di:waypoint x="505" y="1752" /><di:waypoint x="595" y="1752" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_02_di" bpmnElement="Fluxo_3_02"><di:waypoint x="645" y="1752" /><di:waypoint x="735" y="1752" /><bpmndi:BPMNLabel><dc:Bounds x="670" y="1734" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_02_di" bpmnElement="Fluxo_4_02"><di:waypoint x="620" y="1777" /><di:waypoint x="620" y="1887" /><di:waypoint x="735" y="1887" /><bpmndi:BPMNLabel><dc:Bounds x="628" y="1869" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_02_di" bpmnElement="Fluxo_5_02"><di:waypoint x="875" y="1752" /><di:waypoint x="898" y="1752" /><di:waypoint x="898" y="2022" /><di:waypoint x="920" y="2022" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_02_di" bpmnElement="Fluxo_6_02"><di:waypoint x="875" y="1887" /><di:waypoint x="898" y="1887" /><di:waypoint x="898" y="2022" /><di:waypoint x="920" y="2022" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_02_di" bpmnElement="Fluxo_7_02"><di:waypoint x="1060" y="2022" /><di:waypoint x="1150" y="2022" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_02_di" bpmnElement="Fluxo_8_02"><di:waypoint x="1200" y="2022" /><di:waypoint x="1360" y="2022" /><di:waypoint x="1360" y="2252" /><bpmndi:BPMNLabel><dc:Bounds x="1366" y="2026" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_02_di" bpmnElement="Fluxo_9_02"><di:waypoint x="1175" y="2047" /><di:waypoint x="1175" y="2117" /><bpmndi:BPMNLabel><dc:Bounds x="1181" y="2075" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_02_di" bpmnElement="Fluxo_10_02"><di:waypoint x="1245" y="2157" /><di:waypoint x="1294" y="2157" /><di:waypoint x="1294" y="1887" /><di:waypoint x="1342" y="1887" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_02_di" bpmnElement="Fluxo_11_02"><di:waypoint x="1430" y="2292" /><di:waypoint x="1520" y="2292" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_02_di" bpmnElement="Fluxo_12_02"><di:waypoint x="1545" y="2267" /><di:waypoint x="1545" y="2022" /><di:waypoint x="1660" y="2022" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="2004" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_02_di" bpmnElement="Fluxo_13_02"><di:waypoint x="1545" y="2267" /><di:waypoint x="1545" y="2157" /><di:waypoint x="1660" y="2157" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="2139" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_02_di" bpmnElement="Fluxo_14_02"><di:waypoint x="1800" y="2022" /><di:waypoint x="1848" y="2022" /><di:waypoint x="1848" y="1752" /><di:waypoint x="1897" y="1752" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_02_di" bpmnElement="Fluxo_15_02"><di:waypoint x="1800" y="2157" /><di:waypoint x="1848" y="2157" /><di:waypoint x="1848" y="1887" /><di:waypoint x="1897" y="1887" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_02_di" bpmnElement="Fluxo_16_02"><di:waypoint x="268" y="2427" /><di:waypoint x="365" y="2427" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_02_di" bpmnElement="Fluxo_17_02"><di:waypoint x="505" y="2427" /><di:waypoint x="550" y="2427" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_02_di" bpmnElement="Fluxo_18_02"><di:waypoint x="690" y="2427" /><di:waypoint x="735" y="2427" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_02_di" bpmnElement="Fluxo_19_02"><di:waypoint x="875" y="2427" /><di:waypoint x="2100" y="2427" /><di:waypoint x="2100" y="2182" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_02_di" bpmnElement="Fluxo_20_02"><di:waypoint x="2100" y="2132" /><di:waypoint x="2100" y="2022" /><di:waypoint x="2215" y="2022" /><bpmndi:BPMNLabel><dc:Bounds x="2108" y="2004" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_02_di" bpmnElement="Fluxo_21_02"><di:waypoint x="2125" y="2157" /><di:waypoint x="2215" y="2157" /><bpmndi:BPMNLabel><dc:Bounds x="2150" y="2139" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_22_02_di" bpmnElement="Fluxo_22_02"><di:waypoint x="2355" y="2157" /><di:waypoint x="2378" y="2157" /><di:waypoint x="2378" y="2427" /><di:waypoint x="2400" y="2427" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_23_02_di" bpmnElement="Fluxo_23_02"><di:waypoint x="2540" y="2427" /><di:waypoint x="2637" y="2427" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_24_02_di" bpmnElement="Fluxo_24_02"><di:waypoint x="2355" y="2022" /><di:waypoint x="2655" y="2022" /><di:waypoint x="2655" y="2409" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_02_di" bpmnElement="Nota_1_02"><dc:Bounds x="890" y="1650" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_02_di" bpmnElement="Assoc_Nota_1_02"><di:waypoint x="805" y="1712" /><di:waypoint x="890" y="1676" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_2_02_di" bpmnElement="Nota_2_02"><dc:Bounds x="705" y="2325" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_2_02_di" bpmnElement="Assoc_Nota_2_02"><di:waypoint x="620" y="2387" /><di:waypoint x="705" y="2351" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_03-atividade-desempenho-e-conquistas_di" bpmnElement="Participante_03-atividade-desempenho-e-conquistas" isHorizontal="true"><dc:Bounds x="120" y="2555" width="3060" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_03_di" bpmnElement="R_Professor_03" isHorizontal="true"><dc:Bounds x="150" y="2555" width="3030" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_03_di" bpmnElement="R_Sistema_03" isHorizontal="true"><dc:Bounds x="150" y="2825" width="3030" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_03_di" bpmnElement="R_Aluno_03" isHorizontal="true"><dc:Bounds x="150" y="3095" width="3030" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_03_di" bpmnElement="Inicio_03"><dc:Bounds x="232" y="2604" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="2644" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Criar_03_di" bpmnElement="Criar_03"><dc:Bounds x="365" y="2582" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Posse_03_di" bpmnElement="G_Posse_03" isMarkerVisible="true"><dc:Bounds x="595" y="2867" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="2825" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Negar_03_di" bpmnElement="Negar_03"><dc:Bounds x="550" y="2987" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Negado_03_di" bpmnElement="Fim_Negado_03"><dc:Bounds x="787" y="2739" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="829" y="2737" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Questoes_03_di" bpmnElement="Questoes_03"><dc:Bounds x="735" y="2582" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Publicar_03_di" bpmnElement="Publicar_03"><dc:Bounds x="920" y="2582" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Notificar_03_di" bpmnElement="Notificar_03"><dc:Bounds x="1105" y="2852" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Responder_03_di" bpmnElement="Responder_03"><dc:Bounds x="1290" y="3122" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Salvar_03_di" bpmnElement="Salvar_03"><dc:Bounds x="1290" y="2987" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Todas_03_di" bpmnElement="G_Todas_03" isMarkerVisible="true"><dc:Bounds x="1520" y="3002" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="2960" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Corrigir_03_di" bpmnElement="Corrigir_03"><dc:Bounds x="1660" y="2852" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Conquistas_03_di" bpmnElement="Conquistas_03"><dc:Bounds x="1845" y="2852" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Conquista_03_di" bpmnElement="G_Conquista_03" isMarkerVisible="true"><dc:Bounds x="2075" y="2867" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1957" y="2825" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Comemorar_03_di" bpmnElement="Comemorar_03"><dc:Bounds x="2030" y="3122" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ranking_03_di" bpmnElement="Ranking_03"><dc:Bounds x="2215" y="2852" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_03_di" bpmnElement="Analisar_03"><dc:Bounds x="2400" y="2582" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Comentar_03_di" bpmnElement="G_Comentar_03" isMarkerVisible="true"><dc:Bounds x="2630" y="2597" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="2512" y="2555" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Comentar_03_di" bpmnElement="Comentar_03"><dc:Bounds x="2585" y="2717" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VerComentario_03_di" bpmnElement="VerComentario_03"><dc:Bounds x="2770" y="3122" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_03_di" bpmnElement="Fim_03"><dc:Bounds x="3007" y="3144" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="3049" y="3142" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_03_di" bpmnElement="Fluxo_1_03"><di:waypoint x="268" y="2622" /><di:waypoint x="365" y="2622" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_03_di" bpmnElement="Fluxo_2_03"><di:waypoint x="505" y="2622" /><di:waypoint x="550" y="2622" /><di:waypoint x="550" y="2892" /><di:waypoint x="595" y="2892" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_03_di" bpmnElement="Fluxo_3_03"><di:waypoint x="620" y="2867" /><di:waypoint x="620" y="2622" /><di:waypoint x="735" y="2622" /><bpmndi:BPMNLabel><dc:Bounds x="628" y="2604" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_03_di" bpmnElement="Fluxo_4_03"><di:waypoint x="620" y="2917" /><di:waypoint x="620" y="2987" /><bpmndi:BPMNLabel><dc:Bounds x="626" y="2945" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_03_di" bpmnElement="Fluxo_5_03"><di:waypoint x="690" y="3027" /><di:waypoint x="738" y="3027" /><di:waypoint x="738" y="2757" /><di:waypoint x="787" y="2757" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_03_di" bpmnElement="Fluxo_6_03"><di:waypoint x="875" y="2622" /><di:waypoint x="920" y="2622" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_03_di" bpmnElement="Fluxo_7_03"><di:waypoint x="1060" y="2622" /><di:waypoint x="1082" y="2622" /><di:waypoint x="1082" y="2892" /><di:waypoint x="1105" y="2892" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_03_di" bpmnElement="Fluxo_8_03"><di:waypoint x="1245" y="2892" /><di:waypoint x="1268" y="2892" /><di:waypoint x="1268" y="3162" /><di:waypoint x="1290" y="3162" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_03_di" bpmnElement="Fluxo_9_03"><di:waypoint x="1360" y="3122" /><di:waypoint x="1360" y="3067" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_03_di" bpmnElement="Fluxo_10_03"><di:waypoint x="1430" y="3027" /><di:waypoint x="1520" y="3027" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_03_di" bpmnElement="Fluxo_11_03"><di:waypoint x="1545" y="3052" /><di:waypoint x="1545" y="3162" /><di:waypoint x="1430" y="3162" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="3144" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_03_di" bpmnElement="Fluxo_12_03"><di:waypoint x="1545" y="3002" /><di:waypoint x="1545" y="2892" /><di:waypoint x="1660" y="2892" /><bpmndi:BPMNLabel><dc:Bounds x="1553" y="2874" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_03_di" bpmnElement="Fluxo_13_03"><di:waypoint x="1800" y="2892" /><di:waypoint x="1845" y="2892" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_03_di" bpmnElement="Fluxo_14_03"><di:waypoint x="1985" y="2892" /><di:waypoint x="2075" y="2892" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_03_di" bpmnElement="Fluxo_15_03"><di:waypoint x="2100" y="2917" /><di:waypoint x="2100" y="3122" /><bpmndi:BPMNLabel><dc:Bounds x="2106" y="3012" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_03_di" bpmnElement="Fluxo_16_03"><di:waypoint x="2125" y="2892" /><di:waypoint x="2215" y="2892" /><bpmndi:BPMNLabel><dc:Bounds x="2150" y="2874" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_03_di" bpmnElement="Fluxo_17_03"><di:waypoint x="2170" y="3162" /><di:waypoint x="2192" y="3162" /><di:waypoint x="2192" y="2892" /><di:waypoint x="2215" y="2892" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_03_di" bpmnElement="Fluxo_18_03"><di:waypoint x="2355" y="2892" /><di:waypoint x="2378" y="2892" /><di:waypoint x="2378" y="2622" /><di:waypoint x="2400" y="2622" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_03_di" bpmnElement="Fluxo_19_03"><di:waypoint x="2540" y="2622" /><di:waypoint x="2630" y="2622" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_03_di" bpmnElement="Fluxo_20_03"><di:waypoint x="2655" y="2647" /><di:waypoint x="2655" y="2717" /><bpmndi:BPMNLabel><dc:Bounds x="2661" y="2675" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_03_di" bpmnElement="Fluxo_21_03"><di:waypoint x="2680" y="2622" /><di:waypoint x="2840" y="2622" /><di:waypoint x="2840" y="3122" /><bpmndi:BPMNLabel><dc:Bounds x="2846" y="2626" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_22_03_di" bpmnElement="Fluxo_22_03"><di:waypoint x="2725" y="2757" /><di:waypoint x="2748" y="2757" /><di:waypoint x="2748" y="3162" /><di:waypoint x="2770" y="3162" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_23_03_di" bpmnElement="Fluxo_23_03"><di:waypoint x="2910" y="3162" /><di:waypoint x="3007" y="3162" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_03_di" bpmnElement="Nota_1_03"><dc:Bounds x="520" y="2520" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_03_di" bpmnElement="Assoc_Nota_1_03"><di:waypoint x="435" y="2582" /><di:waypoint x="520" y="2546" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_04-desafio-ao-vivo_di" bpmnElement="Participante_04-desafio-ao-vivo" isHorizontal="true"><dc:Bounds x="120" y="3290" width="2320" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Professor_04_di" bpmnElement="R_Professor_04" isHorizontal="true"><dc:Bounds x="150" y="3290" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_04_di" bpmnElement="R_Sistema_04" isHorizontal="true"><dc:Bounds x="150" y="3560" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Aluno_04_di" bpmnElement="R_Aluno_04" isHorizontal="true"><dc:Bounds x="150" y="3830" width="2290" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_04_di" bpmnElement="Inicio_04"><dc:Bounds x="232" y="3339" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="3379" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Criar_04_di" bpmnElement="Criar_04"><dc:Bounds x="365" y="3317" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Posse_04_di" bpmnElement="G_Posse_04" isMarkerVisible="true"><dc:Bounds x="595" y="3602" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="3560" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Negar_04_di" bpmnElement="Negar_04"><dc:Bounds x="550" y="3722" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Negado_04_di" bpmnElement="Fim_Negado_04"><dc:Bounds x="787" y="3744" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="829" y="3742" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Iniciar_04_di" bpmnElement="Iniciar_04"><dc:Bounds x="735" y="3317" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Abrir_04_di" bpmnElement="Abrir_04"><dc:Bounds x="920" y="3587" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Escolher_04_di" bpmnElement="Escolher_04"><dc:Bounds x="1105" y="3857" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pontuar_04_di" bpmnElement="Pontuar_04"><dc:Bounds x="1290" y="3587" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Avancar_04_di" bpmnElement="Avancar_04"><dc:Bounds x="1475" y="3317" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Mais_04_di" bpmnElement="G_Mais_04" isMarkerVisible="true"><dc:Bounds x="1705" y="3602" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1587" y="3560" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Encerrar_04_di" bpmnElement="Encerrar_04"><dc:Bounds x="1845" y="3587" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="VerRanking_04_di" bpmnElement="VerRanking_04"><dc:Bounds x="2030" y="3857" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_04_di" bpmnElement="Fim_04"><dc:Bounds x="2267" y="3879" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="3877" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_04_di" bpmnElement="Fluxo_1_04"><di:waypoint x="268" y="3357" /><di:waypoint x="365" y="3357" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_04_di" bpmnElement="Fluxo_2_04"><di:waypoint x="505" y="3357" /><di:waypoint x="550" y="3357" /><di:waypoint x="550" y="3627" /><di:waypoint x="595" y="3627" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_04_di" bpmnElement="Fluxo_3_04"><di:waypoint x="620" y="3602" /><di:waypoint x="620" y="3357" /><di:waypoint x="735" y="3357" /><bpmndi:BPMNLabel><dc:Bounds x="628" y="3339" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_04_di" bpmnElement="Fluxo_4_04"><di:waypoint x="620" y="3652" /><di:waypoint x="620" y="3722" /><bpmndi:BPMNLabel><dc:Bounds x="626" y="3680" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_04_di" bpmnElement="Fluxo_5_04"><di:waypoint x="690" y="3762" /><di:waypoint x="787" y="3762" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_04_di" bpmnElement="Fluxo_6_04"><di:waypoint x="875" y="3357" /><di:waypoint x="898" y="3357" /><di:waypoint x="898" y="3627" /><di:waypoint x="920" y="3627" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_04_di" bpmnElement="Fluxo_7_04"><di:waypoint x="1060" y="3627" /><di:waypoint x="1082" y="3627" /><di:waypoint x="1082" y="3897" /><di:waypoint x="1105" y="3897" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_04_di" bpmnElement="Fluxo_8_04"><di:waypoint x="1245" y="3897" /><di:waypoint x="1268" y="3897" /><di:waypoint x="1268" y="3627" /><di:waypoint x="1290" y="3627" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_04_di" bpmnElement="Fluxo_9_04"><di:waypoint x="1430" y="3627" /><di:waypoint x="1452" y="3627" /><di:waypoint x="1452" y="3357" /><di:waypoint x="1475" y="3357" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_04_di" bpmnElement="Fluxo_10_04"><di:waypoint x="1615" y="3357" /><di:waypoint x="1660" y="3357" /><di:waypoint x="1660" y="3627" /><di:waypoint x="1705" y="3627" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_04_di" bpmnElement="Fluxo_11_04"><di:waypoint x="1730" y="3602" /><di:waypoint x="1730" y="3565" /><di:waypoint x="990" y="3565" /><di:waypoint x="990" y="3587" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="3569" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_04_di" bpmnElement="Fluxo_12_04"><di:waypoint x="1755" y="3627" /><di:waypoint x="1845" y="3627" /><bpmndi:BPMNLabel><dc:Bounds x="1780" y="3609" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_04_di" bpmnElement="Fluxo_13_04"><di:waypoint x="1985" y="3627" /><di:waypoint x="2008" y="3627" /><di:waypoint x="2008" y="3897" /><di:waypoint x="2030" y="3897" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_04_di" bpmnElement="Fluxo_14_04"><di:waypoint x="2170" y="3897" /><di:waypoint x="2267" y="3897" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_05-monitoramento-dashboard-grafana_di" bpmnElement="Participante_05-monitoramento-dashboard-grafana" isHorizontal="true"><dc:Bounds x="120" y="4025" width="2320" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_05_di" bpmnElement="R_Usuario_05" isHorizontal="true"><dc:Bounds x="150" y="4025" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Api_05_di" bpmnElement="R_Api_05" isHorizontal="true"><dc:Bounds x="150" y="4295" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Grafana_05_di" bpmnElement="R_Grafana_05" isHorizontal="true"><dc:Bounds x="150" y="4565" width="2290" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_05_di" bpmnElement="Inicio_05"><dc:Bounds x="232" y="4074" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="4114" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Filtros_05_di" bpmnElement="Filtros_05"><dc:Bounds x="365" y="4052" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Recortar_05_di" bpmnElement="Recortar_05"><dc:Bounds x="550" y="4322" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Mostrar_05_di" bpmnElement="Mostrar_05"><dc:Bounds x="735" y="4052" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Admin_05_di" bpmnElement="G_Admin_05" isMarkerVisible="true"><dc:Bounds x="965" y="4067" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="4025" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Painel_05_di" bpmnElement="Fim_Painel_05"><dc:Bounds x="1157" y="4209" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1199" y="4207" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Abrir_05_di" bpmnElement="Abrir_05"><dc:Bounds x="1105" y="4052" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Chamar_05_di" bpmnElement="Chamar_05"><dc:Bounds x="1290" y="4592" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Token_05_di" bpmnElement="G_Token_05" isMarkerVisible="true"><dc:Bounds x="1520" y="4337" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="4295" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Negar_05_di" bpmnElement="Negar_05"><dc:Bounds x="1475" y="4457" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Erro_05_di" bpmnElement="Fim_Erro_05"><dc:Bounds x="1527" y="4614" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1569" y="4612" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Calcular_05_di" bpmnElement="Calcular_05"><dc:Bounds x="1660" y="4322" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Montar_05_di" bpmnElement="Montar_05"><dc:Bounds x="1845" y="4592" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_05_di" bpmnElement="Analisar_05"><dc:Bounds x="2030" y="4052" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_05_di" bpmnElement="Fim_05"><dc:Bounds x="2267" y="4074" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="4072" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_05_di" bpmnElement="Fluxo_1_05"><di:waypoint x="268" y="4092" /><di:waypoint x="365" y="4092" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_05_di" bpmnElement="Fluxo_2_05"><di:waypoint x="505" y="4092" /><di:waypoint x="528" y="4092" /><di:waypoint x="528" y="4362" /><di:waypoint x="550" y="4362" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_05_di" bpmnElement="Fluxo_3_05"><di:waypoint x="690" y="4362" /><di:waypoint x="712" y="4362" /><di:waypoint x="712" y="4092" /><di:waypoint x="735" y="4092" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_05_di" bpmnElement="Fluxo_4_05"><di:waypoint x="875" y="4092" /><di:waypoint x="965" y="4092" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_05_di" bpmnElement="Fluxo_5_05"><di:waypoint x="1015" y="4092" /><di:waypoint x="1105" y="4092" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="4074" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_05_di" bpmnElement="Fluxo_6_05"><di:waypoint x="990" y="4117" /><di:waypoint x="990" y="4227" /><di:waypoint x="1157" y="4227" /><bpmndi:BPMNLabel><dc:Bounds x="998" y="4209" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_05_di" bpmnElement="Fluxo_7_05"><di:waypoint x="1245" y="4092" /><di:waypoint x="1268" y="4092" /><di:waypoint x="1268" y="4632" /><di:waypoint x="1290" y="4632" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_05_di" bpmnElement="Fluxo_8_05"><di:waypoint x="1360" y="4592" /><di:waypoint x="1360" y="4362" /><di:waypoint x="1520" y="4362" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_05_di" bpmnElement="Fluxo_9_05"><di:waypoint x="1570" y="4362" /><di:waypoint x="1660" y="4362" /><bpmndi:BPMNLabel><dc:Bounds x="1595" y="4344" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_05_di" bpmnElement="Fluxo_10_05"><di:waypoint x="1545" y="4387" /><di:waypoint x="1545" y="4457" /><bpmndi:BPMNLabel><dc:Bounds x="1551" y="4415" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_05_di" bpmnElement="Fluxo_11_05"><di:waypoint x="1545" y="4537" /><di:waypoint x="1545" y="4614" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_05_di" bpmnElement="Fluxo_12_05"><di:waypoint x="1800" y="4362" /><di:waypoint x="1822" y="4362" /><di:waypoint x="1822" y="4632" /><di:waypoint x="1845" y="4632" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_05_di" bpmnElement="Fluxo_13_05"><di:waypoint x="1985" y="4632" /><di:waypoint x="2008" y="4632" /><di:waypoint x="2008" y="4092" /><di:waypoint x="2030" y="4092" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_05_di" bpmnElement="Fluxo_14_05"><di:waypoint x="2170" y="4092" /><di:waypoint x="2267" y="4092" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participante_06-lgpd-dados-pessoais_di" bpmnElement="Participante_06-lgpd-dados-pessoais" isHorizontal="true"><dc:Bounds x="120" y="4760" width="2320" height="540" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_06_di" bpmnElement="R_Usuario_06" isHorizontal="true"><dc:Bounds x="150" y="4760" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_06_di" bpmnElement="R_Sistema_06" isHorizontal="true"><dc:Bounds x="150" y="5030" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_06_di" bpmnElement="Inicio_06"><dc:Bounds x="232" y="4809" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="4849" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Pedido_06_di" bpmnElement="G_Pedido_06" isMarkerVisible="true"><dc:Bounds x="410" y="4802" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="292" y="4760" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Exportar_06_di" bpmnElement="Exportar_06"><dc:Bounds x="550" y="5057" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Baixar_06_di" bpmnElement="Baixar_06"><dc:Bounds x="735" y="4787" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Copia_06_di" bpmnElement="Fim_Copia_06"><dc:Bounds x="972" y="4809" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1014" y="4807" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Confirmar_06_di" bpmnElement="Confirmar_06"><dc:Bounds x="735" y="4922" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Senha_06_di" bpmnElement="G_Senha_06" isMarkerVisible="true"><dc:Bounds x="965" y="5207" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="5165" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoSenha_06_di" bpmnElement="AvisoSenha_06"><dc:Bounds x="1105" y="4922" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Anonimizar_06_di" bpmnElement="Anonimizar_06"><dc:Bounds x="1105" y="5192" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Excluida_06_di" bpmnElement="Fim_Excluida_06"><dc:Bounds x="1342" y="5214" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1384" y="5212" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Tempo_06_di" bpmnElement="Inicio_Tempo_06"><dc:Bounds x="1527" y="5079" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1485" y="5119" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Descartar_06_di" bpmnElement="Descartar_06"><dc:Bounds x="1660" y="5057" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Algo_06_di" bpmnElement="G_Algo_06" isMarkerVisible="true"><dc:Bounds x="1890" y="5072" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="5030" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Nada_06_di" bpmnElement="Fim_Nada_06"><dc:Bounds x="1897" y="5214" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="5212" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="LogDescarte_06_di" bpmnElement="LogDescarte_06"><dc:Bounds x="2030" y="5057" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Descarte_06_di" bpmnElement="Fim_Descarte_06"><dc:Bounds x="2267" y="5079" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="5077" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_06_di" bpmnElement="Fluxo_1_06"><di:waypoint x="268" y="4827" /><di:waypoint x="410" y="4827" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_06_di" bpmnElement="Fluxo_2_06"><di:waypoint x="435" y="4852" /><di:waypoint x="435" y="5097" /><di:waypoint x="550" y="5097" /><bpmndi:BPMNLabel><dc:Bounds x="443" y="5079" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_06_di" bpmnElement="Fluxo_3_06"><di:waypoint x="435" y="4852" /><di:waypoint x="435" y="4962" /><di:waypoint x="735" y="4962" /><bpmndi:BPMNLabel><dc:Bounds x="443" y="4944" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_06_di" bpmnElement="Fluxo_4_06"><di:waypoint x="690" y="5097" /><di:waypoint x="712" y="5097" /><di:waypoint x="712" y="4827" /><di:waypoint x="735" y="4827" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_06_di" bpmnElement="Fluxo_5_06"><di:waypoint x="875" y="4827" /><di:waypoint x="972" y="4827" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_06_di" bpmnElement="Fluxo_6_06"><di:waypoint x="875" y="4962" /><di:waypoint x="920" y="4962" /><di:waypoint x="920" y="5232" /><di:waypoint x="965" y="5232" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_06_di" bpmnElement="Fluxo_7_06"><di:waypoint x="1015" y="5232" /><di:waypoint x="1105" y="5232" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="5214" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_06_di" bpmnElement="Fluxo_8_06"><di:waypoint x="990" y="5207" /><di:waypoint x="990" y="4962" /><di:waypoint x="1105" y="4962" /><bpmndi:BPMNLabel><dc:Bounds x="998" y="4944" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_06_di" bpmnElement="Fluxo_9_06"><di:waypoint x="1175" y="4922" /><di:waypoint x="1175" y="4900" /><di:waypoint x="805" y="4900" /><di:waypoint x="805" y="4922" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_06_di" bpmnElement="Fluxo_10_06"><di:waypoint x="1245" y="5232" /><di:waypoint x="1342" y="5232" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_06_di" bpmnElement="Fluxo_11_06"><di:waypoint x="1563" y="5097" /><di:waypoint x="1660" y="5097" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_06_di" bpmnElement="Fluxo_12_06"><di:waypoint x="1800" y="5097" /><di:waypoint x="1890" y="5097" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_06_di" bpmnElement="Fluxo_13_06"><di:waypoint x="1940" y="5097" /><di:waypoint x="2030" y="5097" /><bpmndi:BPMNLabel><dc:Bounds x="1965" y="5079" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_06_di" bpmnElement="Fluxo_14_06"><di:waypoint x="1915" y="5122" /><di:waypoint x="1915" y="5214" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="5161" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_06_di" bpmnElement="Fluxo_15_06"><di:waypoint x="2170" y="5097" /><di:waypoint x="2267" y="5097" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_06_di" bpmnElement="Nota_1_06"><dc:Bounds x="1660" y="5159" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_06_di" bpmnElement="Assoc_Nota_1_06"><di:waypoint x="1730" y="5137" /><di:waypoint x="1680" y="5159" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

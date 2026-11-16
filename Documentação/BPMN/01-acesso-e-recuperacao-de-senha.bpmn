@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definicoes_01-acesso-e-recuperacao-de-senha" targetNamespace="https://menteup.umc.br/bpmn" exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_01-acesso-e-recuperacao-de-senha">
+    <bpmn:participant id="Participante_01-acesso-e-recuperacao-de-senha" name="MenteUp — Acesso (2FA), primeiro acesso e recuperação de senha" processRef="Processo_01-acesso-e-recuperacao-de-senha" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_01-acesso-e-recuperacao-de-senha" isExecutable="false">
+    <bpmn:laneSet id="Raias_01-acesso-e-recuperacao-de-senha">
+      <bpmn:lane id="R_Usuario_01" name="Usuário (aluno, professor ou administrador)"><bpmn:flowNodeRef>Inicio_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Credenciais_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoBloqueio_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Bloq_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoStatus_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Status_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Codigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>NovoAceite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Painel_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Rec_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Esqueci_01</bpmn:flowNodeRef><bpmn:flowNodeRef>NovaSenha_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Recuperada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Inicio_Convite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>PrimeiroAcesso_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Convite_01</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_01" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Bloqueada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Senha_01</bpmn:flowNodeRef><bpmn:flowNodeRef>SomarErro_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Terceira_01</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoInvalido_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Bloquear_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Bloqueada_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Status_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Enviar2FA_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Codigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>ErroCodigo_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Token_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Aceite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Limite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Limite_01</bpmn:flowNodeRef><bpmn:flowNodeRef>EnviarLink_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Desbloquear_01</bpmn:flowNodeRef><bpmn:flowNodeRef>Ativar_01</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_01" name="Acessar o MenteUp"><bpmn:outgoing>Fluxo_1_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Credenciais_01" name="Informar e-mail e senha"><bpmn:incoming>Fluxo_1_01</bpmn:incoming><bpmn:incoming>Fluxo_11_01</bpmn:incoming><bpmn:outgoing>Fluxo_2_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Bloqueada_01" name="Conta bloqueada?"><bpmn:incoming>Fluxo_2_01</bpmn:incoming><bpmn:outgoing>Fluxo_3_01</bpmn:outgoing><bpmn:outgoing>Fluxo_4_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoBloqueio_01" name="Avisar conta bloqueada e indicar &quot;Esqueci minha senha&quot;"><bpmn:incoming>Fluxo_4_01</bpmn:incoming><bpmn:outgoing>Fluxo_5_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Bloq_01" name="Seguir para a recuperação"><bpmn:incoming>Fluxo_5_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:exclusiveGateway id="G_Senha_01" name="Senha correta?"><bpmn:incoming>Fluxo_3_01</bpmn:incoming><bpmn:outgoing>Fluxo_6_01</bpmn:outgoing><bpmn:outgoing>Fluxo_7_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="SomarErro_01" name="Somar tentativa errada"><bpmn:incoming>Fluxo_7_01</bpmn:incoming><bpmn:outgoing>Fluxo_8_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Terceira_01" name="3ª tentativa seguida?"><bpmn:incoming>Fluxo_8_01</bpmn:incoming><bpmn:outgoing>Fluxo_9_01</bpmn:outgoing><bpmn:outgoing>Fluxo_10_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoInvalido_01" name="Avisar &quot;e-mail ou senha inválidos&quot;"><bpmn:incoming>Fluxo_9_01</bpmn:incoming><bpmn:outgoing>Fluxo_11_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Bloquear_01" name="Bloquear a conta e encerrar as sessões abertas"><bpmn:incoming>Fluxo_10_01</bpmn:incoming><bpmn:outgoing>Fluxo_12_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Bloqueada_01" name="Conta bloqueada"><bpmn:incoming>Fluxo_12_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:exclusiveGateway id="G_Status_01" name="Professor pendente ou rejeitado?"><bpmn:incoming>Fluxo_6_01</bpmn:incoming><bpmn:outgoing>Fluxo_13_01</bpmn:outgoing><bpmn:outgoing>Fluxo_14_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoStatus_01" name="Avisar &quot;aguardando aprovação&quot; ou &quot;cadastro rejeitado&quot;"><bpmn:incoming>Fluxo_14_01</bpmn:incoming><bpmn:outgoing>Fluxo_15_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Status_01" name="Acesso não liberado"><bpmn:incoming>Fluxo_15_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sendTask id="Enviar2FA_01" name="Enviar o código 2FA por e-mail (5 min, guardado em hash)"><bpmn:incoming>Fluxo_13_01</bpmn:incoming><bpmn:outgoing>Fluxo_16_01</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="Codigo_01" name="Informar o código (pode pedir reenvio: até 3, a cada 60 s)"><bpmn:incoming>Fluxo_16_01</bpmn:incoming><bpmn:incoming>Fluxo_20_01</bpmn:incoming><bpmn:outgoing>Fluxo_17_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Codigo_01" name="Código válido?"><bpmn:incoming>Fluxo_17_01</bpmn:incoming><bpmn:outgoing>Fluxo_18_01</bpmn:outgoing><bpmn:outgoing>Fluxo_19_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ErroCodigo_01" name="Contar o erro (após 5, é preciso pedir novo código)"><bpmn:incoming>Fluxo_19_01</bpmn:incoming><bpmn:outgoing>Fluxo_20_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Token_01" name="Gerar o token JWT e registrar LOGIN no log"><bpmn:incoming>Fluxo_18_01</bpmn:incoming><bpmn:outgoing>Fluxo_21_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Aceite_01" name="Aceitou a versão atual do Termo e da Política?"><bpmn:incoming>Fluxo_21_01</bpmn:incoming><bpmn:outgoing>Fluxo_22_01</bpmn:outgoing><bpmn:outgoing>Fluxo_23_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="NovoAceite_01" name="Ler e aceitar a nova versão"><bpmn:incoming>Fluxo_23_01</bpmn:incoming><bpmn:outgoing>Fluxo_24_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="Fim_Painel_01" name="Painel do perfil aberto"><bpmn:incoming>Fluxo_22_01</bpmn:incoming><bpmn:incoming>Fluxo_24_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Rec_01" name="Esqueceu a senha ou teve a conta bloqueada"><bpmn:outgoing>Fluxo_25_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Esqueci_01" name="Pedir &quot;Esqueci minha senha&quot; informando o e-mail"><bpmn:incoming>Fluxo_25_01</bpmn:incoming><bpmn:outgoing>Fluxo_26_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Limite_01" name="Dentro do limite de pedidos (IP e e-mail)?"><bpmn:incoming>Fluxo_26_01</bpmn:incoming><bpmn:outgoing>Fluxo_27_01</bpmn:outgoing><bpmn:outgoing>Fluxo_28_01</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Limite_01" name="Pedido ignorado"><bpmn:incoming>Fluxo_28_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sendTask id="EnviarLink_01" name="Enviar o link (30 min, uso único); a resposta é igual exista ou não o e-mail"><bpmn:incoming>Fluxo_27_01</bpmn:incoming><bpmn:outgoing>Fluxo_29_01</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:userTask id="NovaSenha_01" name="Abrir o link e criar uma senha forte"><bpmn:incoming>Fluxo_29_01</bpmn:incoming><bpmn:outgoing>Fluxo_30_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Desbloquear_01" name="Trocar a senha, desbloquear e encerrar as sessões abertas"><bpmn:incoming>Fluxo_30_01</bpmn:incoming><bpmn:outgoing>Fluxo_31_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Recuperada_01" name="Senha redefinida: voltar ao login"><bpmn:incoming>Fluxo_31_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:startEvent id="Inicio_Convite_01" name="Receber o convite criado pelo administrador (72 h)"><bpmn:outgoing>Fluxo_32_01</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="PrimeiroAcesso_01" name="Definir a senha e aceitar o Termo e a Política"><bpmn:incoming>Fluxo_32_01</bpmn:incoming><bpmn:outgoing>Fluxo_33_01</bpmn:outgoing></bpmn:userTask>
+    <bpmn:serviceTask id="Ativar_01" name="Salvar a senha e registrar o aceite"><bpmn:incoming>Fluxo_33_01</bpmn:incoming><bpmn:outgoing>Fluxo_34_01</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:endEvent id="Fim_Convite_01" name="Conta ativada: seguir para o login"><bpmn:incoming>Fluxo_34_01</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_01" sourceRef="Inicio_01" targetRef="Credenciais_01" />
+    <bpmn:sequenceFlow id="Fluxo_2_01" sourceRef="Credenciais_01" targetRef="G_Bloqueada_01" />
+    <bpmn:sequenceFlow id="Fluxo_3_01" name="Não" sourceRef="G_Bloqueada_01" targetRef="G_Senha_01" />
+    <bpmn:sequenceFlow id="Fluxo_4_01" name="Sim" sourceRef="G_Bloqueada_01" targetRef="AvisoBloqueio_01" />
+    <bpmn:sequenceFlow id="Fluxo_5_01" sourceRef="AvisoBloqueio_01" targetRef="Fim_Bloq_01" />
+    <bpmn:sequenceFlow id="Fluxo_6_01" name="Sim" sourceRef="G_Senha_01" targetRef="G_Status_01" />
+    <bpmn:sequenceFlow id="Fluxo_7_01" name="Não" sourceRef="G_Senha_01" targetRef="SomarErro_01" />
+    <bpmn:sequenceFlow id="Fluxo_8_01" sourceRef="SomarErro_01" targetRef="G_Terceira_01" />
+    <bpmn:sequenceFlow id="Fluxo_9_01" name="Não" sourceRef="G_Terceira_01" targetRef="AvisoInvalido_01" />
+    <bpmn:sequenceFlow id="Fluxo_10_01" name="Sim" sourceRef="G_Terceira_01" targetRef="Bloquear_01" />
+    <bpmn:sequenceFlow id="Fluxo_11_01" sourceRef="AvisoInvalido_01" targetRef="Credenciais_01" />
+    <bpmn:sequenceFlow id="Fluxo_12_01" sourceRef="Bloquear_01" targetRef="Fim_Bloqueada_01" />
+    <bpmn:sequenceFlow id="Fluxo_13_01" name="Não" sourceRef="G_Status_01" targetRef="Enviar2FA_01" />
+    <bpmn:sequenceFlow id="Fluxo_14_01" name="Sim" sourceRef="G_Status_01" targetRef="AvisoStatus_01" />
+    <bpmn:sequenceFlow id="Fluxo_15_01" sourceRef="AvisoStatus_01" targetRef="Fim_Status_01" />
+    <bpmn:sequenceFlow id="Fluxo_16_01" sourceRef="Enviar2FA_01" targetRef="Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_17_01" sourceRef="Codigo_01" targetRef="G_Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_18_01" name="Sim" sourceRef="G_Codigo_01" targetRef="Token_01" />
+    <bpmn:sequenceFlow id="Fluxo_19_01" name="Não" sourceRef="G_Codigo_01" targetRef="ErroCodigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_20_01" sourceRef="ErroCodigo_01" targetRef="Codigo_01" />
+    <bpmn:sequenceFlow id="Fluxo_21_01" sourceRef="Token_01" targetRef="G_Aceite_01" />
+    <bpmn:sequenceFlow id="Fluxo_22_01" name="Sim" sourceRef="G_Aceite_01" targetRef="Fim_Painel_01" />
+    <bpmn:sequenceFlow id="Fluxo_23_01" name="Não" sourceRef="G_Aceite_01" targetRef="NovoAceite_01" />
+    <bpmn:sequenceFlow id="Fluxo_24_01" sourceRef="NovoAceite_01" targetRef="Fim_Painel_01" />
+    <bpmn:sequenceFlow id="Fluxo_25_01" sourceRef="Inicio_Rec_01" targetRef="Esqueci_01" />
+    <bpmn:sequenceFlow id="Fluxo_26_01" sourceRef="Esqueci_01" targetRef="G_Limite_01" />
+    <bpmn:sequenceFlow id="Fluxo_27_01" name="Sim" sourceRef="G_Limite_01" targetRef="EnviarLink_01" />
+    <bpmn:sequenceFlow id="Fluxo_28_01" name="Não" sourceRef="G_Limite_01" targetRef="Fim_Limite_01" />
+    <bpmn:sequenceFlow id="Fluxo_29_01" sourceRef="EnviarLink_01" targetRef="NovaSenha_01" />
+    <bpmn:sequenceFlow id="Fluxo_30_01" sourceRef="NovaSenha_01" targetRef="Desbloquear_01" />
+    <bpmn:sequenceFlow id="Fluxo_31_01" sourceRef="Desbloquear_01" targetRef="Fim_Recuperada_01" />
+    <bpmn:sequenceFlow id="Fluxo_32_01" sourceRef="Inicio_Convite_01" targetRef="PrimeiroAcesso_01" />
+    <bpmn:sequenceFlow id="Fluxo_33_01" sourceRef="PrimeiroAcesso_01" targetRef="Ativar_01" />
+    <bpmn:sequenceFlow id="Fluxo_34_01" sourceRef="Ativar_01" targetRef="Fim_Convite_01" />
+    <bpmn:textAnnotation id="Nota_1_01"><bpmn:text>Depois de 5 erros o código é bloqueado; o reenvio respeita 60 s e no máximo 3 em 15 min.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_01" sourceRef="Codigo_01" targetRef="Nota_1_01" />
+    <bpmn:textAnnotation id="Nota_2_01"><bpmn:text>Se saiu uma versão nova do Termo ou da Política, a API responde 428 até a pessoa aceitar.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_2_01" sourceRef="NovoAceite_01" targetRef="Nota_2_01" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_01-acesso-e-recuperacao-de-senha">
+    <bpmndi:BPMNPlane id="Plano_01-acesso-e-recuperacao-de-senha" bpmnElement="Colaboracao_01-acesso-e-recuperacao-de-senha">
+      <bpmndi:BPMNShape id="Participante_01-acesso-e-recuperacao-de-senha_di" bpmnElement="Participante_01-acesso-e-recuperacao-de-senha" isHorizontal="true"><dc:Bounds x="120" y="80" width="2690" height="810" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Usuario_01_di" bpmnElement="R_Usuario_01" isHorizontal="true"><dc:Bounds x="150" y="80" width="2660" height="405" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_01_di" bpmnElement="R_Sistema_01" isHorizontal="true"><dc:Bounds x="150" y="485" width="2660" height="405" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_01_di" bpmnElement="Inicio_01"><dc:Bounds x="232" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Credenciais_01_di" bpmnElement="Credenciais_01"><dc:Bounds x="365" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Bloqueada_01_di" bpmnElement="G_Bloqueada_01" isMarkerVisible="true"><dc:Bounds x="595" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="477" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoBloqueio_01_di" bpmnElement="AvisoBloqueio_01"><dc:Bounds x="550" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Bloq_01_di" bpmnElement="Fim_Bloq_01"><dc:Bounds x="787" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="829" y="262" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Senha_01_di" bpmnElement="G_Senha_01" isMarkerVisible="true"><dc:Bounds x="780" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="662" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SomarErro_01_di" bpmnElement="SomarErro_01"><dc:Bounds x="735" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Terceira_01_di" bpmnElement="G_Terceira_01" isMarkerVisible="true"><dc:Bounds x="965" y="662" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="620" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoInvalido_01_di" bpmnElement="AvisoInvalido_01"><dc:Bounds x="920" y="782" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Bloquear_01_di" bpmnElement="Bloquear_01"><dc:Bounds x="1105" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Bloqueada_01_di" bpmnElement="Fim_Bloqueada_01"><dc:Bounds x="1157" y="804" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1199" y="802" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Status_01_di" bpmnElement="G_Status_01" isMarkerVisible="true"><dc:Bounds x="965" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoStatus_01_di" bpmnElement="AvisoStatus_01"><dc:Bounds x="920" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Status_01_di" bpmnElement="Fim_Status_01"><dc:Bounds x="1157" y="399" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1199" y="397" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Enviar2FA_01_di" bpmnElement="Enviar2FA_01"><dc:Bounds x="1105" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Codigo_01_di" bpmnElement="Codigo_01"><dc:Bounds x="1290" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Codigo_01_di" bpmnElement="G_Codigo_01" isMarkerVisible="true"><dc:Bounds x="1520" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1402" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErroCodigo_01_di" bpmnElement="ErroCodigo_01"><dc:Bounds x="1475" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Token_01_di" bpmnElement="Token_01"><dc:Bounds x="1660" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aceite_01_di" bpmnElement="G_Aceite_01" isMarkerVisible="true"><dc:Bounds x="1890" y="527" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="485" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NovoAceite_01_di" bpmnElement="NovoAceite_01"><dc:Bounds x="1845" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Painel_01_di" bpmnElement="Fim_Painel_01"><dc:Bounds x="2082" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2124" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Rec_01_di" bpmnElement="Inicio_Rec_01"><dc:Bounds x="1527" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1485" y="304" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Esqueci_01_di" bpmnElement="Esqueci_01"><dc:Bounds x="1660" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Limite_01_di" bpmnElement="G_Limite_01" isMarkerVisible="true"><dc:Bounds x="1890" y="797" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="755" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Limite_01_di" bpmnElement="Fim_Limite_01"><dc:Bounds x="1897" y="669" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1939" y="667" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EnviarLink_01_di" bpmnElement="EnviarLink_01"><dc:Bounds x="2030" y="782" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NovaSenha_01_di" bpmnElement="NovaSenha_01"><dc:Bounds x="2215" y="242" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Desbloquear_01_di" bpmnElement="Desbloquear_01"><dc:Bounds x="2400" y="782" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Recuperada_01_di" bpmnElement="Fim_Recuperada_01"><dc:Bounds x="2637" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2679" y="262" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_Convite_01_di" bpmnElement="Inicio_Convite_01"><dc:Bounds x="2267" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2225" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PrimeiroAcesso_01_di" bpmnElement="PrimeiroAcesso_01"><dc:Bounds x="2400" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ativar_01_di" bpmnElement="Ativar_01"><dc:Bounds x="2400" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Convite_01_di" bpmnElement="Fim_Convite_01"><dc:Bounds x="2637" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2679" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_01_di" bpmnElement="Fluxo_1_01"><di:waypoint x="268" y="147" /><di:waypoint x="365" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_01_di" bpmnElement="Fluxo_2_01"><di:waypoint x="435" y="187" /><di:waypoint x="435" y="552" /><di:waypoint x="595" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_01_di" bpmnElement="Fluxo_3_01"><di:waypoint x="645" y="552" /><di:waypoint x="780" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="692" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_01_di" bpmnElement="Fluxo_4_01"><di:waypoint x="620" y="527" /><di:waypoint x="620" y="322" /><bpmndi:BPMNLabel><dc:Bounds x="626" y="418" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_01_di" bpmnElement="Fluxo_5_01"><di:waypoint x="690" y="282" /><di:waypoint x="787" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_01_di" bpmnElement="Fluxo_6_01"><di:waypoint x="830" y="552" /><di:waypoint x="965" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="878" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_01_di" bpmnElement="Fluxo_7_01"><di:waypoint x="805" y="577" /><di:waypoint x="805" y="647" /><bpmndi:BPMNLabel><dc:Bounds x="811" y="605" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_01_di" bpmnElement="Fluxo_8_01"><di:waypoint x="875" y="687" /><di:waypoint x="965" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_01_di" bpmnElement="Fluxo_9_01"><di:waypoint x="990" y="712" /><di:waypoint x="990" y="782" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="740" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_01_di" bpmnElement="Fluxo_10_01"><di:waypoint x="1015" y="687" /><di:waypoint x="1105" y="687" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="669" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_01_di" bpmnElement="Fluxo_11_01"><di:waypoint x="920" y="822" /><di:waypoint x="435" y="822" /><di:waypoint x="435" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_01_di" bpmnElement="Fluxo_12_01"><di:waypoint x="1175" y="727" /><di:waypoint x="1175" y="804" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_01_di" bpmnElement="Fluxo_13_01"><di:waypoint x="1015" y="552" /><di:waypoint x="1105" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_01_di" bpmnElement="Fluxo_14_01"><di:waypoint x="990" y="527" /><di:waypoint x="990" y="457" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="485" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_01_di" bpmnElement="Fluxo_15_01"><di:waypoint x="1060" y="417" /><di:waypoint x="1157" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_01_di" bpmnElement="Fluxo_16_01"><di:waypoint x="1245" y="552" /><di:waypoint x="1268" y="552" /><di:waypoint x="1268" y="147" /><di:waypoint x="1290" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_01_di" bpmnElement="Fluxo_17_01"><di:waypoint x="1430" y="147" /><di:waypoint x="1475" y="147" /><di:waypoint x="1475" y="552" /><di:waypoint x="1520" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_01_di" bpmnElement="Fluxo_18_01"><di:waypoint x="1570" y="552" /><di:waypoint x="1660" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="1595" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_19_01_di" bpmnElement="Fluxo_19_01"><di:waypoint x="1545" y="577" /><di:waypoint x="1545" y="647" /><bpmndi:BPMNLabel><dc:Bounds x="1551" y="605" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_20_01_di" bpmnElement="Fluxo_20_01"><di:waypoint x="1475" y="687" /><di:waypoint x="1360" y="687" /><di:waypoint x="1360" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_21_01_di" bpmnElement="Fluxo_21_01"><di:waypoint x="1800" y="552" /><di:waypoint x="1890" y="552" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_22_01_di" bpmnElement="Fluxo_22_01"><di:waypoint x="1940" y="552" /><di:waypoint x="2011" y="552" /><di:waypoint x="2011" y="147" /><di:waypoint x="2082" y="147" /><bpmndi:BPMNLabel><dc:Bounds x="2019" y="129" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_23_01_di" bpmnElement="Fluxo_23_01"><di:waypoint x="1915" y="527" /><di:waypoint x="1915" y="457" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="485" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_24_01_di" bpmnElement="Fluxo_24_01"><di:waypoint x="1985" y="417" /><di:waypoint x="2034" y="417" /><di:waypoint x="2034" y="147" /><di:waypoint x="2082" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_25_01_di" bpmnElement="Fluxo_25_01"><di:waypoint x="1563" y="282" /><di:waypoint x="1660" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_26_01_di" bpmnElement="Fluxo_26_01"><di:waypoint x="1800" y="282" /><di:waypoint x="1845" y="282" /><di:waypoint x="1845" y="822" /><di:waypoint x="1890" y="822" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_27_01_di" bpmnElement="Fluxo_27_01"><di:waypoint x="1940" y="822" /><di:waypoint x="2030" y="822" /><bpmndi:BPMNLabel><dc:Bounds x="1965" y="804" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_28_01_di" bpmnElement="Fluxo_28_01"><di:waypoint x="1915" y="797" /><di:waypoint x="1915" y="705" /><bpmndi:BPMNLabel><dc:Bounds x="1921" y="744" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_29_01_di" bpmnElement="Fluxo_29_01"><di:waypoint x="2170" y="822" /><di:waypoint x="2192" y="822" /><di:waypoint x="2192" y="282" /><di:waypoint x="2215" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_30_01_di" bpmnElement="Fluxo_30_01"><di:waypoint x="2355" y="282" /><di:waypoint x="2378" y="282" /><di:waypoint x="2378" y="822" /><di:waypoint x="2400" y="822" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_31_01_di" bpmnElement="Fluxo_31_01"><di:waypoint x="2540" y="822" /><di:waypoint x="2588" y="822" /><di:waypoint x="2588" y="282" /><di:waypoint x="2637" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_32_01_di" bpmnElement="Fluxo_32_01"><di:waypoint x="2303" y="147" /><di:waypoint x="2400" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_33_01_di" bpmnElement="Fluxo_33_01"><di:waypoint x="2470" y="187" /><di:waypoint x="2470" y="512" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_34_01_di" bpmnElement="Fluxo_34_01"><di:waypoint x="2540" y="552" /><di:waypoint x="2588" y="552" /><di:waypoint x="2588" y="147" /><di:waypoint x="2637" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_01_di" bpmnElement="Nota_1_01"><dc:Bounds x="1445" y="45" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_01_di" bpmnElement="Assoc_Nota_1_01"><di:waypoint x="1360" y="107" /><di:waypoint x="1445" y="71" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_2_01_di" bpmnElement="Nota_2_01"><dc:Bounds x="2000" y="315" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_2_01_di" bpmnElement="Assoc_Nota_2_01"><di:waypoint x="1915" y="377" /><di:waypoint x="2000" y="341" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

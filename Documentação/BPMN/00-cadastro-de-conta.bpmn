@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definicoes_00-cadastro-de-conta" targetNamespace="https://menteup.umc.br/bpmn" exporter="MenteUp" exporterVersion="1.0">
+  <bpmn:collaboration id="Colaboracao_00-cadastro-de-conta">
+    <bpmn:participant id="Participante_00-cadastro-de-conta" name="MenteUp — Cadastro de conta e aprovação de professor" processRef="Processo_00-cadastro-de-conta" />
+  </bpmn:collaboration>
+  <bpmn:process id="Processo_00-cadastro-de-conta" isExecutable="false">
+    <bpmn:laneSet id="Raias_00-cadastro-de-conta">
+      <bpmn:lane id="R_Visitante_00" name="Visitante (novo aluno ou professor)"><bpmn:flowNodeRef>Inicio_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Dados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Termo_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Aluno_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Aprovado_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Fim_Rejeitado_00</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Sistema_00" name="Sistema MenteUp"><bpmn:flowNodeRef>G_Dados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>ErroDados_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Email_00</bpmn:flowNodeRef><bpmn:flowNodeRef>AvisoEmail_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Salvar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Prof_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Pendente_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Aprovar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>Rejeitar_00</bpmn:flowNodeRef></bpmn:lane>
+      <bpmn:lane id="R_Admin_00" name="Administrador"><bpmn:flowNodeRef>Analisar_00</bpmn:flowNodeRef><bpmn:flowNodeRef>G_Aprovar_00</bpmn:flowNodeRef></bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio_00" name="Acessar a página de cadastro"><bpmn:outgoing>Fluxo_1_00</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Dados_00" name="Escolher Aluno ou Professor e informar nome, e-mail e senha"><bpmn:incoming>Fluxo_1_00</bpmn:incoming><bpmn:incoming>Fluxo_6_00</bpmn:incoming><bpmn:incoming>Fluxo_9_00</bpmn:incoming><bpmn:outgoing>Fluxo_2_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Termo_00" name="Abrir o Termo e a Política e marcar o aceite"><bpmn:incoming>Fluxo_2_00</bpmn:incoming><bpmn:outgoing>Fluxo_3_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Dados_00" name="Dados válidos e senha forte?"><bpmn:incoming>Fluxo_3_00</bpmn:incoming><bpmn:outgoing>Fluxo_4_00</bpmn:outgoing><bpmn:outgoing>Fluxo_5_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="ErroDados_00" name="Mostrar o erro e os requisitos da senha"><bpmn:incoming>Fluxo_5_00</bpmn:incoming><bpmn:outgoing>Fluxo_6_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Email_00" name="E-mail já cadastrado?"><bpmn:incoming>Fluxo_4_00</bpmn:incoming><bpmn:outgoing>Fluxo_7_00</bpmn:outgoing><bpmn:outgoing>Fluxo_8_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="AvisoEmail_00" name="Avisar que o e-mail já está cadastrado"><bpmn:incoming>Fluxo_8_00</bpmn:incoming><bpmn:outgoing>Fluxo_9_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:serviceTask id="Salvar_00" name="Criptografar a senha (BCrypt), registrar o aceite e salvar"><bpmn:incoming>Fluxo_7_00</bpmn:incoming><bpmn:outgoing>Fluxo_10_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="G_Prof_00" name="É professor?"><bpmn:incoming>Fluxo_10_00</bpmn:incoming><bpmn:outgoing>Fluxo_11_00</bpmn:outgoing><bpmn:outgoing>Fluxo_12_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fim_Aluno_00" name="Conta de aluno criada: seguir para o login"><bpmn:incoming>Fluxo_11_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:serviceTask id="Pendente_00" name="Marcar o cadastro como PENDENTE"><bpmn:incoming>Fluxo_12_00</bpmn:incoming><bpmn:outgoing>Fluxo_13_00</bpmn:outgoing></bpmn:serviceTask>
+    <bpmn:userTask id="Analisar_00" name="Analisar o pedido em Usuários"><bpmn:incoming>Fluxo_13_00</bpmn:incoming><bpmn:outgoing>Fluxo_14_00</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="G_Aprovar_00" name="Aprovar?"><bpmn:incoming>Fluxo_14_00</bpmn:incoming><bpmn:outgoing>Fluxo_15_00</bpmn:outgoing><bpmn:outgoing>Fluxo_16_00</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Aprovar_00" name="Marcar APROVADA e avisar o professor por e-mail"><bpmn:incoming>Fluxo_15_00</bpmn:incoming><bpmn:outgoing>Fluxo_17_00</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:sendTask id="Rejeitar_00" name="Marcar REJEITADA e avisar o professor por e-mail"><bpmn:incoming>Fluxo_16_00</bpmn:incoming><bpmn:outgoing>Fluxo_18_00</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:endEvent id="Fim_Aprovado_00" name="Professor liberado para o login"><bpmn:incoming>Fluxo_17_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:endEvent id="Fim_Rejeitado_00" name="Pode enviar um novo pedido"><bpmn:incoming>Fluxo_18_00</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fluxo_1_00" sourceRef="Inicio_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_2_00" sourceRef="Dados_00" targetRef="Termo_00" />
+    <bpmn:sequenceFlow id="Fluxo_3_00" sourceRef="Termo_00" targetRef="G_Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_4_00" name="Sim" sourceRef="G_Dados_00" targetRef="G_Email_00" />
+    <bpmn:sequenceFlow id="Fluxo_5_00" name="Não" sourceRef="G_Dados_00" targetRef="ErroDados_00" />
+    <bpmn:sequenceFlow id="Fluxo_6_00" sourceRef="ErroDados_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_7_00" name="Não" sourceRef="G_Email_00" targetRef="Salvar_00" />
+    <bpmn:sequenceFlow id="Fluxo_8_00" name="Sim" sourceRef="G_Email_00" targetRef="AvisoEmail_00" />
+    <bpmn:sequenceFlow id="Fluxo_9_00" sourceRef="AvisoEmail_00" targetRef="Dados_00" />
+    <bpmn:sequenceFlow id="Fluxo_10_00" sourceRef="Salvar_00" targetRef="G_Prof_00" />
+    <bpmn:sequenceFlow id="Fluxo_11_00" name="Não" sourceRef="G_Prof_00" targetRef="Fim_Aluno_00" />
+    <bpmn:sequenceFlow id="Fluxo_12_00" name="Sim" sourceRef="G_Prof_00" targetRef="Pendente_00" />
+    <bpmn:sequenceFlow id="Fluxo_13_00" sourceRef="Pendente_00" targetRef="Analisar_00" />
+    <bpmn:sequenceFlow id="Fluxo_14_00" sourceRef="Analisar_00" targetRef="G_Aprovar_00" />
+    <bpmn:sequenceFlow id="Fluxo_15_00" name="Sim" sourceRef="G_Aprovar_00" targetRef="Aprovar_00" />
+    <bpmn:sequenceFlow id="Fluxo_16_00" name="Não" sourceRef="G_Aprovar_00" targetRef="Rejeitar_00" />
+    <bpmn:sequenceFlow id="Fluxo_17_00" sourceRef="Aprovar_00" targetRef="Fim_Aprovado_00" />
+    <bpmn:sequenceFlow id="Fluxo_18_00" sourceRef="Rejeitar_00" targetRef="Fim_Rejeitado_00" />
+    <bpmn:textAnnotation id="Nota_1_00"><bpmn:text>O aceite só é liberado depois de abrir os dois documentos.</bpmn:text></bpmn:textAnnotation>
+    <bpmn:association id="Assoc_Nota_1_00" sourceRef="Termo_00" targetRef="Nota_1_00" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagrama_00-cadastro-de-conta">
+    <bpmndi:BPMNPlane id="Plano_00-cadastro-de-conta" bpmnElement="Colaboracao_00-cadastro-de-conta">
+      <bpmndi:BPMNShape id="Participante_00-cadastro-de-conta_di" bpmnElement="Participante_00-cadastro-de-conta" isHorizontal="true"><dc:Bounds x="120" y="80" width="2320" height="675" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Visitante_00_di" bpmnElement="R_Visitante_00" isHorizontal="true"><dc:Bounds x="150" y="80" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Sistema_00_di" bpmnElement="R_Sistema_00" isHorizontal="true"><dc:Bounds x="150" y="350" width="2290" height="270" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="R_Admin_00_di" bpmnElement="R_Admin_00" isHorizontal="true"><dc:Bounds x="150" y="620" width="2290" height="135" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Inicio_00_di" bpmnElement="Inicio_00"><dc:Bounds x="232" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="190" y="169" width="120" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Dados_00_di" bpmnElement="Dados_00"><dc:Bounds x="365" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Termo_00_di" bpmnElement="Termo_00"><dc:Bounds x="550" y="107" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Dados_00_di" bpmnElement="G_Dados_00" isMarkerVisible="true"><dc:Bounds x="780" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="662" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ErroDados_00_di" bpmnElement="ErroDados_00"><dc:Bounds x="735" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Email_00_di" bpmnElement="G_Email_00" isMarkerVisible="true"><dc:Bounds x="965" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="847" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AvisoEmail_00_di" bpmnElement="AvisoEmail_00"><dc:Bounds x="920" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Salvar_00_di" bpmnElement="Salvar_00"><dc:Bounds x="1105" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Prof_00_di" bpmnElement="G_Prof_00" isMarkerVisible="true"><dc:Bounds x="1335" y="392" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1217" y="350" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Aluno_00_di" bpmnElement="Fim_Aluno_00"><dc:Bounds x="1342" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="1384" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pendente_00_di" bpmnElement="Pendente_00"><dc:Bounds x="1475" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Analisar_00_di" bpmnElement="Analisar_00"><dc:Bounds x="1660" y="647" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="G_Aprovar_00_di" bpmnElement="G_Aprovar_00" isMarkerVisible="true"><dc:Bounds x="1890" y="662" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="1772" y="620" width="125" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Aprovar_00_di" bpmnElement="Aprovar_00"><dc:Bounds x="2030" y="377" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Rejeitar_00_di" bpmnElement="Rejeitar_00"><dc:Bounds x="2030" y="512" width="140" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Aprovado_00_di" bpmnElement="Fim_Aprovado_00"><dc:Bounds x="2267" y="129" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="127" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fim_Rejeitado_00_di" bpmnElement="Fim_Rejeitado_00"><dc:Bounds x="2267" y="264" width="36" height="36" /><bpmndi:BPMNLabel><dc:Bounds x="2309" y="262" width="115" height="40" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fluxo_1_00_di" bpmnElement="Fluxo_1_00"><di:waypoint x="268" y="147" /><di:waypoint x="365" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_2_00_di" bpmnElement="Fluxo_2_00"><di:waypoint x="505" y="147" /><di:waypoint x="550" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_3_00_di" bpmnElement="Fluxo_3_00"><di:waypoint x="690" y="147" /><di:waypoint x="735" y="147" /><di:waypoint x="735" y="417" /><di:waypoint x="780" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_4_00_di" bpmnElement="Fluxo_4_00"><di:waypoint x="830" y="417" /><di:waypoint x="965" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="878" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_5_00_di" bpmnElement="Fluxo_5_00"><di:waypoint x="805" y="442" /><di:waypoint x="805" y="512" /><bpmndi:BPMNLabel><dc:Bounds x="811" y="470" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_6_00_di" bpmnElement="Fluxo_6_00"><di:waypoint x="735" y="552" /><di:waypoint x="435" y="552" /><di:waypoint x="435" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_7_00_di" bpmnElement="Fluxo_7_00"><di:waypoint x="1015" y="417" /><di:waypoint x="1105" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1040" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_8_00_di" bpmnElement="Fluxo_8_00"><di:waypoint x="990" y="442" /><di:waypoint x="990" y="512" /><bpmndi:BPMNLabel><dc:Bounds x="996" y="470" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_9_00_di" bpmnElement="Fluxo_9_00"><di:waypoint x="990" y="592" /><di:waypoint x="990" y="610" /><di:waypoint x="435" y="610" /><di:waypoint x="435" y="187" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_10_00_di" bpmnElement="Fluxo_10_00"><di:waypoint x="1245" y="417" /><di:waypoint x="1335" y="417" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_11_00_di" bpmnElement="Fluxo_11_00"><di:waypoint x="1360" y="392" /><di:waypoint x="1360" y="165" /><bpmndi:BPMNLabel><dc:Bounds x="1366" y="272" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_12_00_di" bpmnElement="Fluxo_12_00"><di:waypoint x="1385" y="417" /><di:waypoint x="1475" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1410" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_13_00_di" bpmnElement="Fluxo_13_00"><di:waypoint x="1615" y="417" /><di:waypoint x="1638" y="417" /><di:waypoint x="1638" y="687" /><di:waypoint x="1660" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_14_00_di" bpmnElement="Fluxo_14_00"><di:waypoint x="1800" y="687" /><di:waypoint x="1890" y="687" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_15_00_di" bpmnElement="Fluxo_15_00"><di:waypoint x="1915" y="662" /><di:waypoint x="1915" y="417" /><di:waypoint x="2030" y="417" /><bpmndi:BPMNLabel><dc:Bounds x="1923" y="399" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_16_00_di" bpmnElement="Fluxo_16_00"><di:waypoint x="1915" y="662" /><di:waypoint x="1915" y="552" /><di:waypoint x="2030" y="552" /><bpmndi:BPMNLabel><dc:Bounds x="1923" y="534" width="40" height="14" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_17_00_di" bpmnElement="Fluxo_17_00"><di:waypoint x="2170" y="417" /><di:waypoint x="2218" y="417" /><di:waypoint x="2218" y="147" /><di:waypoint x="2267" y="147" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fluxo_18_00_di" bpmnElement="Fluxo_18_00"><di:waypoint x="2170" y="552" /><di:waypoint x="2218" y="552" /><di:waypoint x="2218" y="282" /><di:waypoint x="2267" y="282" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Nota_1_00_di" bpmnElement="Nota_1_00"><dc:Bounds x="705" y="45" width="210" height="52" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Assoc_Nota_1_00_di" bpmnElement="Assoc_Nota_1_00"><di:waypoint x="620" y="107" /><di:waypoint x="705" y="71" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
