@@ -90,6 +90,14 @@ export interface EstadoDesafio {
     minhaAlternativaId: number | null;
     alternativaCorretaId: number | null;
     meusPontos: number | null;
+    /// Quem está com o desafio aberto agora (só vem para o professor e o administrador)
+    alunosNaSala?: AlunoNaSala[] | null;
+}
+
+export interface AlunoNaSala {
+    id: number;
+    nome: string;
+    avatar: string | null;
 }
 
 export interface LinhaRanking {

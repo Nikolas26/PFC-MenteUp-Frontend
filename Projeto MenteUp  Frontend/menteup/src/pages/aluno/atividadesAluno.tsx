@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, CalendarDays, ChevronRight, Gamepad2, Lock, Search } from "lucide-react";
+import { BookOpen, CalendarDays, ChevronRight, Gamepad2, Lock, MessageSquare, Search } from "lucide-react";
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ProgressoCard from "../../components/aluno/ProgressoCard";
@@ -218,6 +218,12 @@ function AtividadesAluno() {
                                         <Gamepad2 size={14} />
                                         {NOME_TIPO[atividade.tipo ?? "QUIZ"] ?? atividade.tipo}
                                     </span>
+                                    {item.comentarioProfessor && (
+                                        <span className={styles.comentario} title={item.comentarioProfessor}>
+                                            <MessageSquare size={14} />
+                                            Comentário do professor: veja no resultado
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div>

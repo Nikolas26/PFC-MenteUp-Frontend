@@ -4,7 +4,9 @@ import {
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
+    ListChecks,
     Lock,
+    MessageSquare,
     PartyPopper,
     Trophy,
     TriangleAlert,
@@ -13,6 +15,7 @@ import {
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import ConfirmarExclusao from "../../components/ConfirmarExclusao";
+import { RevisaoAtividade } from "../../components/RevisaoRespostas";
 import { useConquistas } from "../../hooks/useConquistas";
 import { apiFetch, lerErro } from "../../services/api";
 import {
@@ -67,6 +70,10 @@ interface ResultadoAtividadeResponse {
     totalQuestoes: number;
     acertos: number;
     pontuacao: number;
+    /// Comentário do professor sobre o resultado (nulo enquanto não houver)
+    comentarioProfessor?: string | null;
+    comentadoPor?: string | null;
+    comentadoEm?: string | null;
 }
 
 interface RespostaProgressoResponse {
@@ -110,6 +117,8 @@ function ResponderAtividadeAluno() {
     const [paraFinalizar, setParaFinalizar] = useState<Record<number, Valor> | null>(null);
     // Próxima atividade aberta, oferecida ao terminar esta
     const [proximaId, setProximaId] = useState<number | null>(null);
+    // Revisão das perguntas depois de enviar
+    const [verRespostas, setVerRespostas] = useState(false);
 
     const atividade = questionario?.atividade;
     const perguntas = questionario?.perguntas ?? [];
@@ -406,6 +415,25 @@ function ResponderAtividadeAluno() {
                         </div>
                     </div>
 
+                    {meuResultado.comentarioProfessor && (
+                        <div className={styles.comentario} role="note">
+                            <span className={styles.comentarioTitulo}>
+                                <MessageSquare size={16} aria-hidden />
+                                Comentário do professor
+                                {meuResultado.comentadoPor ? ` · ${meuResultado.comentadoPor}` : ""}
+                            </span>
+                            <p className={styles.comentarioTexto}>{meuResultado.comentarioProfessor}</p>
+                            {meuResultado.comentadoEm && (
+                                <span className={styles.note}>
+                                    {new Date(meuResultado.comentadoEm.replace(" ", "T")).toLocaleString("pt-BR", {
+                                        dateStyle: "short",
+                                        timeStyle: "short",
+                                    })}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
                     <div className={styles.resultActions}>
                         {proximaId !== null ? (
                             <button
@@ -423,7 +451,16 @@ function ResponderAtividadeAluno() {
                         <button type="button" className={styles.ghost} onClick={() => navigate("/aluno/ranking")}>
                             <Trophy size={16} /> Ver ranking
                         </button>
+                        <button
+                            type="button"
+                            className={styles.ghost}
+                            aria-expanded={verRespostas}
+                            onClick={() => setVerRespostas((atual) => !atual)}
+                        >
+                            <ListChecks size={16} /> {verRespostas ? "Ocultar minhas respostas" : "Ver minhas respostas"}
+                        </button>
                     </div>
+                    {verRespostas && id && <RevisaoAtividade atividadeId={id} />}
                     <p className={styles.note}>Suas respostas foram registradas.</p>
                 </section>
             </AlunoLayout>
