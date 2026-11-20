@@ -366,3 +366,13 @@
     padding: 22px;
   }
 }
+
+/* Aviso de comentário do professor no card */
+.comentario {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mu-indigo-soft);
+}

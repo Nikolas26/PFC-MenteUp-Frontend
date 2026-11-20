@@ -37,6 +37,8 @@ export interface AtividadeAluno {
     acertos: number | null;
     pontuacao: number | null;
     percentualConclusao: number | null;
+    /// Comentário do professor no resultado (nulo enquanto não houver)
+    comentarioProfessor?: string | null;
 }
 
 export interface RankingAluno {

@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {ArrowLeft, Check, Play, SkipForward, TriangleAlert, Trophy, Users} from "lucide-react";
+import Avatar from "../../components/Avatar";
 import {BadgeStatusDesafio, BarraTempo, IconeDesafio, TabelaRanking} from "../../components/ComponentesDesafio";
 import {useEstadoDesafio} from "../../hooks/useEstadoDesafio";
 import {apiFetch, lerErro} from "../../services/api";
@@ -97,6 +98,7 @@ function ConduzirDesafio({perfil}: { perfil: PerfilGestao }) {
     const ultimaPergunta = estado.numeroPergunta === estado.totalPerguntas;
     const emJogo = status === "EM_ANDAMENTO" && pergunta !== null;
     const finalizado = status === "ENCERRADO";
+    const naSala = estado.alunosNaSala ?? [];
     const progresso = estado.totalPerguntas ? Math.round(((estado.numeroPergunta ?? 0) / estado.totalPerguntas) * 100) : 0;
 
     return (
@@ -132,6 +134,29 @@ function ConduzirDesafio({perfil}: { perfil: PerfilGestao }) {
                         <p className={styles.warning}>
                             <TriangleAlert size={16}/> Esta turma ainda não tem alunos: ninguém poderá responder.
                         </p>
+                    )}
+
+                    {totalAlunos !== 0 && (
+                        <div className={styles.lobby} aria-live="polite">
+                            <span className={styles.lobbyTitle}>
+                                <Users size={16}/> Alunos na sala: {naSala.length}
+                                {totalAlunos !== null && ` de ${totalAlunos}`}
+                            </span>
+                            {naSala.length === 0 ? (
+                                <p className={styles.lobbyEmpty}>
+                                    Aguardando os alunos abrirem o desafio na tela deles...
+                                </p>
+                            ) : (
+                                <ul className={styles.lobbyList}>
+                                    {naSala.map((aluno) => (
+                                        <li key={aluno.id} className={styles.lobbyChip}>
+                                            <Avatar avatar={aluno.avatar} nome={aluno.nome}/>
+                                            <span>{aluno.nome}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                     )}
 
                     <button type="button" onClick={() => executar("iniciar")} disabled={processando} className={styles.startButton}>

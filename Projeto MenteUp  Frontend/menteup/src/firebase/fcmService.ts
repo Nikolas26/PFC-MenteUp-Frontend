@@ -1,7 +1,19 @@
 import { getToken } from "firebase/messaging";
 import { onMessage } from "firebase/messaging";
-import { messaging } from "../firebase/firebaseConfig";
+import { firebaseConfig, messaging } from "../firebase/firebaseConfig";
 import { API_URL } from "../services/api";
+
+/// O service worker fica na pasta public e não recebe as variáveis VITE_:
+/// a configuração do Firebase (pública, sem segredo) vai no endereço de registro
+function enderecoDoServiceWorker(): string {
+    const parametros = new URLSearchParams();
+    Object.entries(firebaseConfig).forEach(([chave, valor]) => {
+        if (valor) {
+            parametros.set(chave, String(valor));
+        }
+    });
+    return `/firebase-messaging-sw.js?${parametros.toString()}`;
+}
 export async function gerarTokenFCM(): Promise<string | null> {
     try {
         console.log("1. Iniciando geração do FCM Token...");
@@ -19,8 +31,8 @@ export async function gerarTokenFCM(): Promise<string | null> {
 
         const registration =
             await navigator.serviceWorker.register(
-                "/firebase-messaging-sw.js"
-            );;
+                enderecoDoServiceWorker()
+            );
 
         console.log("5. Gerando FCM Token...");
 
@@ -128,10 +140,19 @@ export function ouvirNotificacoesFCM() {
 
             console.log("🔔 Criando notificação...");
 
-            new Notification(titulo, {
+            const aviso = new Notification(titulo, {
                 body: mensagem,
                 icon: "/favicon.ico"
             });
+
+            // Clique: abre a tela do aviso (desafio, atividades ou resultado)
+            const url = payload.data?.url;
+            if (url) {
+                aviso.onclick = () => {
+                    window.focus();
+                    window.location.href = url;
+                };
+            }
 
         } else {
 

@@ -293,3 +293,37 @@
   font-size: 12px;
   color: var(--mu-app-muted);
 }
+
+/* Comentário do professor no resultado */
+.comentario {
+  width: 100%;
+  max-width: 504px;
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  border-radius: 14px;
+  background: var(--mu-app-glass);
+  border: 1px solid var(--mu-app-glass-border);
+  border-left: 4px solid var(--mu-indigo);
+}
+
+.comentarioTitulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mu-indigo-soft);
+}
+
+.comentarioTexto {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mu-app-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

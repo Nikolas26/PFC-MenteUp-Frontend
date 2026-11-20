@@ -398,3 +398,63 @@
     align-items: stretch;
   }
 }
+
+/* Sala de espera: alunos com o desafio aberto antes do início */
+.lobby {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--mu-app-glass);
+  border: 1px solid var(--mu-app-glass-border);
+}
+
+.lobbyTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mu-app-text);
+}
+
+.lobbyEmpty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mu-app-muted);
+}
+
+.lobbyList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lobbyChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: var(--mu-app-glass);
+  border: 1px solid var(--mu-app-glass-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mu-app-text);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Revisão das perguntas no fim do desafio (tela do aluno) */
+.revisaoCard {
+  margin-top: 18px;
+  padding: 20px;
+}

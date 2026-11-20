@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {ArrowLeft, Check, Hourglass, Trophy, X} from "lucide-react";
 import AlunoLayout from "../../components/aluno/AlunoLayout";
+import {RevisaoDesafio} from "../../components/RevisaoRespostas";
 import {useConquistas} from "../../hooks/useConquistas";
 import {BadgeStatusDesafio, BarraTempo, IconeDesafio, TabelaRanking} from "../../components/ComponentesDesafio";
 import {useEstadoDesafio} from "../../hooks/useEstadoDesafio";
@@ -210,6 +211,12 @@ function JogarDesafio() {
                             <ArrowLeft size={16}/> Voltar para desafios
                         </button>
                     </aside>
+                </div>
+            )}
+
+            {status === "ENCERRADO" && id && (
+                <div className={`${base.card} ${styles.revisaoCard}`}>
+                    <RevisaoDesafio desafioId={id}/>
                 </div>
             )}
         </AlunoLayout>
