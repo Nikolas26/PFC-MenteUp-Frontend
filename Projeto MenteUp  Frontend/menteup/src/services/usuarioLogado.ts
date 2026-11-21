@@ -53,12 +53,33 @@ export function sair() {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
     localStorage.removeItem("usuarioId");
+    sessionStorage.removeItem(CHAVE_IDADE_PENDENTE);
 }
 
 /// Dados que chegam quando o login dá certo
 export interface RespostaLogin extends UsuarioLogado {
     token: string;
     aceitesPendentes?: string[];
+    /// Aluno de conta antiga que ainda não informou a data de nascimento
+    idadePendente?: boolean;
+}
+
+const CHAVE_IDADE_PENDENTE = "idadePendente";
+
+/// Telas que a pessoa precisa passar antes de entrar no painel
+export const TELA_ACEITE = "/novo-aceite";
+export const TELA_IDADE = "/informar-idade";
+
+/// Lembra, durante esta visita, que falta informar a data de nascimento
+export function marcarIdadePendente(pendente: boolean) {
+    if (pendente) sessionStorage.setItem(CHAVE_IDADE_PENDENTE, "1");
+    else sessionStorage.removeItem(CHAVE_IDADE_PENDENTE);
+}
+
+/// Para onde a pessoa vai depois de aceitar os documentos
+export function destinoDepoisDoAceite(): string {
+    if (sessionStorage.getItem(CHAVE_IDADE_PENDENTE)) return TELA_IDADE;
+    return painelDoPerfil(obterUsuarioLogado()?.tipoUsuario) ?? "/login";
 }
 
 /// Tela inicial de cada perfil
@@ -77,16 +98,19 @@ export function painelDoPerfil(tipoUsuario?: string): string | null {
 
 /// Guarda o acesso no navegador sem repetir o token nos dados da pessoa e diz para qual tela ela vai
 export function salvarLogin(dados: RespostaLogin): string | null {
-    const { token, aceitesPendentes, ...usuario } = dados;
+    const { token, aceitesPendentes, idadePendente, ...usuario } = dados;
 
     localStorage.setItem("token", token);
     localStorage.setItem("usuario", JSON.stringify(usuario));
+    marcarIdadePendente(idadePendente === true);
 
     const painel = painelDoPerfil(usuario.tipoUsuario);
     if (!painel) return null;
 
-    /// Se saiu versão nova do Termo ou da Política, a pessoa aceita antes de entrar
-    return aceitesPendentes && aceitesPendentes.length > 0 ? "/novo-aceite" : painel;
+    /// Primeiro o aceite de versão nova dos documentos, depois a data de nascimento, se faltar
+    if (aceitesPendentes && aceitesPendentes.length > 0) return TELA_ACEITE;
+    if (idadePendente) return TELA_IDADE;
+    return painel;
 }
 
 const CHAVE_AVISO_LOGIN = "avisoLogin";

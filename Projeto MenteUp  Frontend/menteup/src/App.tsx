@@ -41,6 +41,7 @@ const Verificar2FA = lazy(() => import("./pages/Verificar2FA.tsx"));
 const TermoAceite = lazy(() => import("./pages/TermoAceite"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const NovoAceite = lazy(() => import("./pages/NovoAceite"));
+const InformarIdade = lazy(() => import("./pages/InformarIdade"));
 const MeusDados = lazy(() => import("./pages/MeusDados"));
 const Desempenho = lazy(() => import("./pages/Desempenho/Desempenho.tsx"));
 const MeuPerfil = lazy(() => import("./pages/Perfil/MeuPerfil.tsx"));
@@ -120,6 +121,16 @@ function App() {
                         element={
                             <PrivateRoute permitido={["ALUNO", "PROFESSOR", "ADMINISTRADOR"]}>
                                 <NovoAceite />
+                            </PrivateRoute>
+                        }
+                    />
+
+                    {/* DATA DE NASCIMENTO DE CONTAS ANTIGAS DE ALUNO */}
+                    <Route
+                        path="/informar-idade"
+                        element={
+                            <PrivateRoute permitido={["ALUNO"]}>
+                                <InformarIdade />
                             </PrivateRoute>
                         }
                     />

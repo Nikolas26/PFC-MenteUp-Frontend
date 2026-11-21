@@ -9,7 +9,7 @@ const ESPERA_REENVIO_SEGUNDOS = 60;
 // Situações em que um novo código não resolve: a pessoa precisa entrar com a senha de novo
 const PRECISA_LOGIN = ["SEM_LOGIN_RECENTE", "LIMITE_REENVIO_2FA"];
 import { LogoMarca, LogoNome } from "../components/Logo";
-import { salvarLogin } from "../services/usuarioLogado";
+import { salvarLogin, TELA_ACEITE, TELA_IDADE } from "../services/usuarioLogado";
 
 function Verificar2FA() {
     const navigate = useNavigate();
@@ -103,8 +103,8 @@ function Verificar2FA() {
                 return;
             }
 
-            /// As notificações do celular só são ativadas depois que os documentos estiverem aceitos
-            if (destino !== "/novo-aceite") {
+            /// As notificações do celular só são ativadas depois do aceite e da data de nascimento
+            if (destino !== TELA_ACEITE && destino !== TELA_IDADE) {
                 /// Em segundo plano: o pedido de permissão e o envio do token não seguram a entrada no painel
                 void import("../firebase/fcmService").then(({ registrarTokenFCM }) => registrarTokenFCM())
                     .catch(() => undefined);

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CircleCheck, FileText } from "lucide-react";
 
 import CampoSenha from "../components/CampoSenha";
+import CampoDataNascimento, { problemaDataNascimento } from "../components/CampoDataNascimento";
 import { API_URL, lerErro } from "../services/api";
 import { problemaSenha } from "../services/senha";
 import { useVersoesDocumentos } from "../hooks/useVersoesDocumentos";
@@ -25,6 +26,8 @@ function PrimeiroAcesso() {
     const [aceitou, setAceitou] = useState(false);
     /// Versões do Termo e da Política que a pessoa está aceitando
     const { versoes, erroVersoes, recarregarVersoes } = useVersoesDocumentos();
+    /// O convite não diz o perfil da pessoa: o campo aparece para todos e o servidor exige só do aluno
+    const [dataNascimento, setDataNascimento] = useState("");
     const [novaSenha, setNovaSenha] = useState("");
     const [confirmacao, setConfirmacao] = useState("");
     const [erro, setErro] = useState("");
@@ -42,6 +45,11 @@ function PrimeiroAcesso() {
         }
         if (!aceitou) {
             setErro("Para usar o MenteUp, leia e aceite o Termo de Aceite e a Política de Privacidade.");
+            return;
+        }
+        const problemaData = problemaDataNascimento(dataNascimento, false);
+        if (problemaData) {
+            setErro(problemaData);
             return;
         }
         const problema = problemaSenha(novaSenha);
@@ -69,6 +77,7 @@ function PrimeiroAcesso() {
                     token,
                     novaSenha,
                     aceitouTermos: aceitou,
+                    ...(dataNascimento ? { dataNascimento } : {}),
                     termoVersao: versoes.termoVersao,
                     politicaVersao: versoes.politicaVersao,
                 }),
@@ -180,6 +189,12 @@ function PrimeiroAcesso() {
                         )}
                     </span>
                 </label>
+
+                <CampoDataNascimento
+                    valor={dataNascimento}
+                    aoMudar={setDataNascimento}
+                    ajuda="Obrigatória para alunos: o MenteUp é para pessoas com 12 anos ou mais. Professores podem deixar em branco."
+                />
 
                 <CampoSenha
                     id="nova-senha"
