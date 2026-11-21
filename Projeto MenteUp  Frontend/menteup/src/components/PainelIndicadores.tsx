@@ -27,6 +27,32 @@ interface PainelIndicadoresProps {
 }
 
 const numero = (valor: number) => valor.toLocaleString("pt-BR");
+const dataCurta = (dia: string) => new Date(dia).toLocaleDateString("pt-BR");
+
+/// Acima de 90 dias as barras diárias não cabem na tela, então o gráfico passa a somar por semana
+const LIMITE_BARRAS_DIARIAS = 90;
+
+interface BarraGrafico {
+    chave: string;
+    inicio: string;
+    fim: string;
+    concluidas: number;
+}
+
+function montarBarras(dias: { dia: string; concluidas: number }[]): BarraGrafico[] {
+    const tamanho = dias.length > LIMITE_BARRAS_DIARIAS ? 7 : 1;
+    const barras: BarraGrafico[] = [];
+    for (let i = 0; i < dias.length; i += tamanho) {
+        const grupo = dias.slice(i, i + tamanho);
+        barras.push({
+            chave: grupo[0].dia,
+            inicio: grupo[0].dia,
+            fim: grupo[grupo.length - 1].dia,
+            concluidas: grupo.reduce((soma, d) => soma + d.concluidas, 0),
+        });
+    }
+    return barras;
+}
 
 /// Cada combinação de filtros é guardada separadamente
 const chavePainel = (f: FiltrosPainel) => `/dashboard/painel|${f.dias}|${f.turmaId}|${f.alunoId}`;
@@ -73,11 +99,14 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
 
     const ehAluno = painel?.perfil === "ALUNO";
     const resumo = painel?.resumo;
-    const maiorDia = Math.max(1, ...(painel?.conclusoesPorDia.map((d) => d.concluidas) ?? [0]));
     const dias = painel?.conclusoesPorDia ?? [];
+    const porSemana = dias.length > LIMITE_BARRAS_DIARIAS;
+    const barras = montarBarras(dias);
+    const maiorBarra = Math.max(1, ...barras.map((b) => b.concluidas));
 
     /// Trocar período, turma ou aluno volta para a primeira página
     const chaveFiltros = `${filtros.dias}|${filtros.turmaId}|${filtros.alunoId}`;
+    /// Turmas podem ter o mesmo nome, então a chave das linhas usa a posição (nome repetido fazia o React acumular linhas)
     const paginaTurmas = usePaginacao(painel?.acertoPorTurma ?? [], 10, chaveFiltros);
     const paginaAlunos = usePaginacao(painel?.desempenhoAlunos ?? [], 20, chaveFiltros);
 
@@ -178,25 +207,27 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                     </div>
 
                     <div className={styles.bloco}>
-                        <h3 className={styles.blocoTitulo}>Atividades concluídas por dia</h3>
+                        <h3 className={styles.blocoTitulo}>
+                            Atividades concluídas por {porSemana ? "semana" : "dia"}
+                        </h3>
                         <div
                             className={styles.grafico}
                             role="img"
-                            aria-label={`Atividades concluídas por dia: ${numero(resumo?.atividadesConcluidas ?? 0)} no período`}
+                            aria-label={`Atividades concluídas por ${porSemana ? "semana" : "dia"}: ${numero(resumo?.atividadesConcluidas ?? 0)} no período`}
                         >
-                            {dias.map((d) => (
+                            {barras.map((b) => (
                                 <div
-                                    key={d.dia}
-                                    title={`${new Date(d.dia).toLocaleDateString("pt-BR")}: ${d.concluidas}`}
-                                    className={`${styles.barra} ${d.concluidas === 0 ? styles.barraVazia : ""}`}
-                                    style={{ height: `${Math.max(3, (d.concluidas / maiorDia) * 100)}%` }}
+                                    key={b.chave}
+                                    title={`${b.inicio === b.fim ? dataCurta(b.inicio) : `${dataCurta(b.inicio)} a ${dataCurta(b.fim)}`}: ${b.concluidas}`}
+                                    className={`${styles.barra} ${b.concluidas === 0 ? styles.barraVazia : ""}`}
+                                    style={{ height: `${Math.max(3, (b.concluidas / maiorBarra) * 100)}%` }}
                                 />
                             ))}
                         </div>
                         {dias.length > 0 && (
                             <div className={styles.eixo}>
-                                <span>{new Date(dias[0].dia).toLocaleDateString("pt-BR")}</span>
-                                <span>{new Date(dias[dias.length - 1].dia).toLocaleDateString("pt-BR")}</span>
+                                <span>{dataCurta(dias[0].dia)}</span>
+                                <span>{dataCurta(dias[dias.length - 1].dia)}</span>
                             </div>
                         )}
                     </div>
@@ -204,8 +235,8 @@ function PainelIndicadores({ titulo = "Indicadores", aoCarregar }: PainelIndicad
                     {painel.acertoPorTurma.length > 0 && (
                         <div className={styles.bloco}>
                             <h3 className={styles.blocoTitulo}>Acerto por turma</h3>
-                            {paginaTurmas.visiveis.map((t) => (
-                                <div key={t.turma} className={styles.linhaTurma}>
+                            {paginaTurmas.visiveis.map((t, i) => (
+                                <div key={`${paginaTurmas.inicio + i}|${t.turma}`} className={styles.linhaTurma}>
                                     <span>{t.turma}</span>
                                     <div className={styles.trilho}>
                                         <div className={styles.preenchido} style={{ width: `${t.acerto ?? 0}%` }} />

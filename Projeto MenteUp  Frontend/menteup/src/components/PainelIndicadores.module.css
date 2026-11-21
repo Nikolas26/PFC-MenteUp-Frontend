@@ -80,6 +80,7 @@
 }
 
 .bloco {
+  min-width: 0;
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--mu-app-glass-border);
@@ -95,6 +96,7 @@
 
 .grafico {
   display: flex;
+  overflow: hidden;
   align-items: flex-end;
   gap: 2px;
   height: 120px;
