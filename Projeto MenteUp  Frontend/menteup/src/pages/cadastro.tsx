@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import CampoSenha from "../components/CampoSenha";
+import CampoDataNascimento, { problemaDataNascimento } from "../components/CampoDataNascimento";
 import { API_URL, lerErro } from "../services/api";
 import { problemaSenha } from "../services/senha";
 import { useVersoesDocumentos } from "../hooks/useVersoesDocumentos";
@@ -28,6 +29,8 @@ function Cadastro() {
     const [perfil, setPerfil] = useState<Perfil>(perfilInicial);
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
+    /// Só o aluno informa a data de nascimento: o MenteUp é para quem tem 12 anos ou mais
+    const [dataNascimento, setDataNascimento] = useState("");
     const [senha, setSenha] = useState("");
     const [confirmarSenha, setConfirmarSenha] = useState("");
     const [carregando, setCarregando] = useState(false);
@@ -50,6 +53,14 @@ function Cadastro() {
         if (!nome.trim() || !email.trim() || !senha || !confirmarSenha) {
             setErro("Preencha todos os campos.");
             return;
+        }
+
+        if (perfil === "ALUNO") {
+            const problemaData = problemaDataNascimento(dataNascimento, true);
+            if (problemaData) {
+                setErro(problemaData);
+                return;
+            }
         }
 
         const problema = problemaSenha(senha);
@@ -91,6 +102,7 @@ function Cadastro() {
                     usuario: email.trim(),
                     senha,
                     tipoUsuario: perfil,
+                    ...(perfil === "ALUNO" ? { dataNascimento } : {}),
                     aceitouTermos: aceitou,
                     termoVersao: versoes.termoVersao,
                     politicaVersao: versoes.politicaVersao,
@@ -264,6 +276,14 @@ function Cadastro() {
                                     onChange={(event) => setEmail(event.target.value)}
                                 />
                             </div>
+
+                            {perfil === "ALUNO" && (
+                                <CampoDataNascimento
+                                    valor={dataNascimento}
+                                    aoMudar={setDataNascimento}
+                                    ajuda="O MenteUp é para pessoas com 12 anos ou mais."
+                                />
+                            )}
 
                             <CampoSenha
                                 id="senha"

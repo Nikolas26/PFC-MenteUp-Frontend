@@ -50,11 +50,16 @@ export async function apiFetch(
         limparCache();
     }
 
-    /// Saiu uma versão nova do Termo ou da Política: a pessoa precisa aceitar antes de continuar
-    if (resposta.status === 428 && window.location.pathname !== "/novo-aceite") {
-        window.location.href = "/novo-aceite";
+    if (resposta.status === 428) {
+        /// Aluno de conta antiga sem data de nascimento: informa a data antes de continuar
+        const tela = (await codigoDoErro(resposta)) === "IDADE_PENDENTE" ? "/informar-idade" : "/novo-aceite";
 
-        throw new Error("Aceite pendente");
+        /// Versão nova do Termo ou da Política: a pessoa aceita antes de continuar
+        if (window.location.pathname !== tela) {
+            window.location.href = tela;
+
+            throw new Error("Pendência antes de continuar");
+        }
     }
 
     return resposta;

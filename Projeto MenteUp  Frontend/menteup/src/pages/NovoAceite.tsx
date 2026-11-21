@@ -17,7 +17,7 @@ import {
     type DocumentoVersao,
     type SituacaoAceites,
 } from "../services/documentos";
-import { obterUsuarioLogado, painelDoPerfil, sair } from "../services/usuarioLogado";
+import { destinoDepoisDoAceite, sair, TELA_IDADE } from "../services/usuarioLogado";
 
 const NOME_DOCUMENTO: Record<string, string> = {
     TERMO: "Termo de Aceite",
@@ -48,7 +48,6 @@ async function carregarPendentes(situacao: SituacaoAceites): Promise<Pendente[]>
 /// Aparece quando sai uma versão nova do Termo ou da Política: a pessoa lê, aceita e segue para a plataforma
 function NovoAceite() {
     const navigate = useNavigate();
-    const painel = painelDoPerfil(obterUsuarioLogado()?.tipoUsuario) ?? "/login";
 
     const [pendentes, setPendentes] = useState<Pendente[] | null>(null);
     const [abertos, setAbertos] = useState<Record<string, boolean>>({});
@@ -66,7 +65,7 @@ function NovoAceite() {
         buscarAceites()
             .then(async (situacao) => {
                 if (situacao.pendentes.length === 0) {
-                    if (ativo) navigate(painel, { replace: true });
+                    if (ativo) navigate(destinoDepoisDoAceite(), { replace: true });
                     return;
                 }
                 const lista = await carregarPendentes(situacao);
@@ -77,7 +76,7 @@ function NovoAceite() {
         return () => {
             ativo = false;
         };
-    }, [navigate, painel]);
+    }, [navigate]);
 
     const leuTodos = !!pendentes && pendentes.every((p) => lidos[p.tipo]);
 
@@ -103,9 +102,10 @@ function NovoAceite() {
             });
 
             if (situacao.pendentes.length === 0) {
-                /// Com os documentos aceitos, as notificações do celular já podem ser ativadas
-                registrarTokenFCM();
-                navigate(painel, { replace: true });
+                /// Se ainda falta a data de nascimento, ela vem antes do painel
+                const destino = destinoDepoisDoAceite();
+                if (destino !== TELA_IDADE) registrarTokenFCM();
+                navigate(destino, { replace: true });
                 return;
             }
 
