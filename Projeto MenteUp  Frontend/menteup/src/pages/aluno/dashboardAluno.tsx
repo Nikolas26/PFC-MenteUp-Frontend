@@ -8,6 +8,7 @@ import {
     FlaskConical,
     Hourglass,
     Ruler,
+    Timer,
 } from "lucide-react";
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
@@ -180,6 +181,11 @@ function DashboardAluno() {
                 <div className={styles.heroStats}>
                     <div className={styles.statCard}>
                         <Flame size={20} className={styles.gold} />
+                        <strong>{resumo?.diasConsecutivos ?? 0}</strong>
+                        <span>{resumo?.diasConsecutivos === 1 ? "Dia seguido" : "Dias seguidos"}</span>
+                    </div>
+                    <div className={styles.statCard}>
+                        <Timer size={20} className={styles.gold} />
                         <strong>{dados.emAndamento.length}</strong>
                         <span>Em andamento</span>
                     </div>

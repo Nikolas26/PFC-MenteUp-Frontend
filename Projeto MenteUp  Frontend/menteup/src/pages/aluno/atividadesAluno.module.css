@@ -63,7 +63,7 @@
   background: rgba(var(--mu-veu-rgb), 0.14);
 }
 
-.tabActive {
+.tab.tabActive {
   /* roxo-escuro: o gradiente da marca sumiria sobre o fundo, que é o mesmo gradiente */
   background: #2e1065;
   border-color: #2e1065;

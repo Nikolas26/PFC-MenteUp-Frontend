@@ -460,3 +460,64 @@
     font-size: 16px;
   }
 }
+
+.headerComFiltro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--mu-app-muted);
+}
+
+.select {
+  composes: clara from "../../styles/superficie.module.css";
+  min-width: 260px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid var(--mu-app-glass-border);
+  background: var(--mu-app-glass);
+  color: var(--mu-app-text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  outline: none;
+}
+
+.select:focus {
+  border-color: var(--mu-indigo);
+}
+
+.select option {
+  background: #fff;
+  color: #14152b;
+}
+
+.nota {
+  margin: -12px 0 20px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--mu-app-muted);
+}
+
+@media (max-width: 640px) {
+  .select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filtro {
+    width: 100%;
+  }
+}

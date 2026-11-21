@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Crown, RotateCw, Trophy } from "lucide-react";
 
 import AlunoLayout from "../../components/aluno/AlunoLayout";
 import AdminLayout from "../../components/administrador/AdminLayout";
-import { apiFetch } from "../../services/api";
+import ProfessorLayout from "../../components/professor/ProfessorLayout";
+import { apiFetch, lerErro } from "../../services/api";
 import { gravarCache, lerCache } from "../../services/cacheTelas";
 import { useConquistas } from "../../hooks/useConquistas";
 import { infoNivel } from "../../services/conquistasInfo";
@@ -22,41 +23,91 @@ const PODIO = [
     { rotulo: "Terceiro", classe: styles.third },
 ];
 
-export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMINISTRADOR" }) {
+/// Turma do seletor do professor (GET /turmas/all)
+interface TurmaDoProfessor {
+    id: number;
+    nome: string;
+    arquivada: boolean;
+    alunos?: { id: number; nomeUsuario: string }[];
+}
+
+/// A API envia atividadeConcluidas (sem o "s"); aceita os dois nomes
+function normalizar(item: RankingAluno & { atividadeConcluidas?: number }): RankingAluno {
+    return { ...item, atividadesConcluidas: item.atividadeConcluidas ?? item.atividadesConcluidas ?? 0 };
+}
+
+const MENSAGEM_ERRO: Record<string, string> = {
+    SEM_ACESSO_A_TURMA: "Você não tem acesso ao ranking desta turma.",
+    TURMA_NAO_ENCONTRADA: "Turma não encontrada.",
+};
+
+type PerfilRanking = "ALUNO" | "PROFESSOR" | "ADMINISTRADOR";
+
+export default function Ranking({ perfil = "ALUNO" }: { perfil?: PerfilRanking }) {
     const admin = perfil === "ADMINISTRADOR";
-    const [ranking, setRanking] = useState<RankingAluno[]>(() => lerCache<RankingAluno[]>("/ranking") ?? []);
-    const [carregando, setCarregando] = useState(() => lerCache("/ranking") === undefined);
+    const professor = perfil === "PROFESSOR";
+
+    /// Professor: null é "Todas as minhas turmas"
+    const [turmas, setTurmas] = useState<TurmaDoProfessor[]>([]);
+    const [turmaId, setTurmaId] = useState<number | null>(null);
+    const endpoint = turmaId == null ? "/ranking" : `/ranking?turmaId=${turmaId}`;
+
+    const [ranking, setRanking] = useState<RankingAluno[]>(() => lerCache<RankingAluno[]>(endpoint) ?? []);
+    const [carregando, setCarregando] = useState(() => lerCache(endpoint) === undefined);
     const [erro, setErro] = useState("");
+    const ultimaBusca = useRef("");
 
     const meuId = idDoUsuario(obterUsuarioLogado());
     const { resumo } = useConquistas();
 
     useEffect(() => {
+        if (!professor) return;
+        apiFetch("/turmas/all")
+            .then((resposta) => (resposta.ok ? resposta.json() : []))
+            .then((lista: TurmaDoProfessor[]) => setTurmas(lista))
+            .catch(() => setTurmas([]));
+    }, [professor]);
+
+    useEffect(() => {
         carregarRanking();
-    }, []);
+    }, [endpoint]);
 
     async function carregarRanking() {
+        /// Só a última turma escolhida atualiza a tela
+        ultimaBusca.current = endpoint;
+        const guardado = lerCache<RankingAluno[]>(endpoint);
+
         try {
             /// Com dados guardados o ranking continua na tela enquanto a versão nova chega
-            setCarregando(lerCache("/ranking") === undefined);
+            if (guardado) setRanking(guardado);
+            setCarregando(guardado === undefined);
             setErro("");
 
-            const resposta = await apiFetch("/ranking");
+            const resposta = await apiFetch(endpoint);
 
             if (!resposta.ok) {
-                throw new Error("Não foi possível carregar o ranking.");
+                const { codigo, mensagem } = await lerErro(resposta, "Não foi possível carregar o ranking.");
+                if (ultimaBusca.current !== endpoint) return;
+                setRanking([]);
+                setErro(MENSAGEM_ERRO[codigo] ?? mensagem);
+                return;
             }
 
-            const dados: RankingAluno[] = await resposta.json();
+            const dados: RankingAluno[] = (await resposta.json()).map(normalizar);
+            gravarCache(endpoint, dados);
+            if (ultimaBusca.current !== endpoint) return;
             setRanking(dados);
-            gravarCache("/ranking", dados);
         } catch (error) {
+            if (ultimaBusca.current !== endpoint) return;
             console.error("Erro ao carregar ranking:", error);
             setErro("Não foi possível carregar o ranking.");
         } finally {
-            setCarregando(false);
+            if (ultimaBusca.current === endpoint) setCarregando(false);
         }
     }
+
+    /// O professor vê o nome completo na lista; o pódio continua com o nome curto
+    const nomeNaLista = (nome: string) => (professor ? nome : nomeCurto(nome));
 
     const meu = useMemo(() => {
         const indice = meuId ? ranking.findIndex((a) => a.usuarioId === meuId) : -1;
@@ -66,9 +117,9 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
 
     const nivelMeu = infoNivel(resumo);
 
-    /// Do 4º lugar em diante, 20 por página
+    /// Do 4º lugar em diante, 20 por página; trocar de turma volta para a primeira
     const restantes = useMemo(() => ranking.slice(3), [ranking]);
-    const paginacao = usePaginacao(restantes, 20);
+    const paginacao = usePaginacao(restantes, 20, endpoint);
     const deslocamento = paginacao.pagina * 20;
 
     function textoPosicao() {
@@ -86,15 +137,49 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
 
     const conteudo = (
         <>
-            <header className={styles.header}>
-                <span className={styles.eyebrow}>{admin ? "Administração" : "Evolução em equipe"}</span>
-                <h1 className={styles.title}>Ranking geral</h1>
-                <p className={styles.subtitle}>
-                    {admin
-                        ? "Classificação geral dos alunos por pontos e atividades concluídas."
-                        : "Compare seu progresso de forma saudável e celebre cada avanço da turma."}
-                </p>
+            <header className={`${styles.header} ${professor ? styles.headerComFiltro : ""}`}>
+                <div>
+                    <span className={styles.eyebrow}>
+                        {admin ? "Administração" : professor ? "Acompanhamento" : "Evolução em equipe"}
+                    </span>
+                    <h1 className={styles.title}>{professor ? "Ranking das turmas" : "Ranking geral"}</h1>
+                    <p className={styles.subtitle}>
+                        {admin
+                            ? "Classificação geral dos alunos por pontos e atividades concluídas."
+                            : professor
+                                ? "Classificação dos alunos das suas turmas por pontos e atividades concluídas."
+                                : "Compare seu progresso de forma saudável e celebre cada avanço da turma."}
+                    </p>
+                </div>
+
+                {professor && (
+                    <label className={styles.filtro}>
+                        Turma
+                        <select
+                            className={styles.select}
+                            value={turmaId ?? ""}
+                            onChange={(evento) => setTurmaId(evento.target.value ? Number(evento.target.value) : null)}
+                        >
+                            <option value="">Todas as minhas turmas</option>
+                            {turmas.map((turma) => {
+                                const total = turma.alunos?.length ?? 0;
+                                return (
+                                    <option key={turma.id} value={turma.id}>
+                                        {turma.nome} ({total} {total === 1 ? "aluno" : "alunos"})
+                                    </option>
+                                );
+                            })}
+                        </select>
+                    </label>
+                )}
             </header>
+
+            {professor && turmaId != null && (
+                <p className={styles.nota}>
+                    No ranking de uma turma contam só as atividades e os desafios dela. Os pontos de conquistas
+                    entram apenas em "Todas as minhas turmas", por isso os números podem ficar menores.
+                </p>
+            )}
 
             <div className={styles.layout}>
                 <div className={styles.main}>
@@ -121,8 +206,14 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
                         ) : ranking.length === 0 ? (
                             <div className={styles.state}>
                                 <Trophy size={40} className={styles.stateIcon} />
-                                <strong>Ainda não há participantes no ranking</strong>
-                                <span>Conclua uma atividade para começar a acumular pontos.</span>
+                                <strong>
+                                    {professor ? "Nenhum aluno pontuou ainda" : "Ainda não há participantes no ranking"}
+                                </strong>
+                                <span>
+                                    {professor
+                                        ? "Os alunos aparecem aqui quando somarem pontos ou concluírem uma atividade."
+                                        : "Conclua uma atividade para começar a acumular pontos."}
+                                </span>
                             </div>
                         ) : (
                             <ol className={styles.podium}>
@@ -192,7 +283,7 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
                                             <RostoUsuario avatar={aluno.avatar} nome={aluno.nomeUsuario} className={styles.avatar} />
                                             <span className={styles.info}>
                                                 <span className={styles.name}>
-                                                    {nomeCurto(aluno.nomeUsuario)}
+                                                    {nomeNaLista(aluno.nomeUsuario)}
                                                     {souEu && " (você)"}
                                                 </span>
                                                 <span className={styles.meta}>
@@ -213,7 +304,7 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
                     </section>
                 </div>
 
-                {!admin && (
+                {!admin && !professor && (
                     <aside className={styles.aside}>
                         <section className={styles.card}>
                             <Crown size={36} className={styles.gold} />
@@ -235,6 +326,7 @@ export default function Ranking({ perfil = "ALUNO" }: { perfil?: "ALUNO" | "ADMI
     );
 
     if (admin) return <AdminLayout>{conteudo}</AdminLayout>;
+    if (professor) return <ProfessorLayout>{conteudo}</ProfessorLayout>;
 
     return <AlunoLayout>{conteudo}</AlunoLayout>;
 }

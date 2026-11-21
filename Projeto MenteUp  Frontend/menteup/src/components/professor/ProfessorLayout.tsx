@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import {BookOpen, CircleUser, LayoutGrid, Plus, TrendingUp, Users, Zap} from "lucide-react";
+import {BookOpen, CircleUser, LayoutGrid, Plus, TrendingUp, Trophy, Users, Zap} from "lucide-react";
 
 import AppLayout, { type ItemMenu } from "../layout/AppLayout";
 import EngajamentoCard from "./EngajamentoCard";
@@ -14,6 +14,7 @@ const MENU: ItemMenu[] = [
     { rotulo: "Desafios", icone: <Zap size={20} />, para: "/professor/desafios" },
     { rotulo: "Turmas", icone: <Users size={20} />, para: "/professor/turmas" },
     { rotulo: "Desempenho", icone: <TrendingUp size={20} />, para: "/professor/desempenho" },
+    { rotulo: "Ranking", icone: <Trophy size={20} />, para: "/professor/ranking" },
     { rotulo: "Meu perfil", icone: <CircleUser size={20} />, para: "/professor/perfil" },
 ];
 
