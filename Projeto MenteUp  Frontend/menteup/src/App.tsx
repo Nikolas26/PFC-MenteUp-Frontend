@@ -30,6 +30,7 @@ const EditarAtividadeAdministrador = lazy(() => import("./pages/Administrador/Ed
 const CriarAtividadeAdministrador = lazy(() => import("./pages/Administrador/CriarAtividadeAdministrador"));
 const AtividadesAdministrador = lazy(() => import("./pages/Administrador/AtividadesAdministrador"));
 const LogsAdministrador = lazy(() => import("./pages/Administrador/LogsAdministrador.tsx"));
+const Seguranca = lazy(() => import("./pages/Administrador/Seguranca"));
 const TurmasGestao = lazy(() => import("./pages/Desafio/TurmasGestao.tsx"));
 const DetalheTurma = lazy(() => import("./pages/Desafio/DetalheTurma.tsx"));
 const DesafiosGestao = lazy(() => import("./pages/Desafio/DesafiosGestao.tsx"));
@@ -442,6 +443,14 @@ function App() {
                         element={
                             <PrivateRoute permitido={["ADMINISTRADOR"]}>
                                 <LogsAdministrador />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/administrador/seguranca"
+                        element={
+                            <PrivateRoute permitido={["ADMINISTRADOR"]}>
+                                <Seguranca />
                             </PrivateRoute>
                         }
                     />

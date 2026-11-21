@@ -41,6 +41,8 @@ export interface AlunoTurma {
     nomeUsuario: string;
     // E-mail: só vem para o administrador (LGPD). Na turma e para o professor, não vem.
     usuario?: string;
+    /// E-mail com parte escondida, como chega na lista de usuários
+    emailMascarado?: string;
     tipoUsuario?: string;
 }
 

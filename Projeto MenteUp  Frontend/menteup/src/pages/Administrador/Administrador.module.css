@@ -846,3 +846,43 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.emailLinha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.emailLinha small {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.botaoOlho {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mu-app-muted);
+  cursor: pointer;
+}
+
+.botaoOlho:hover {
+  color: var(--mu-app-text);
+  border-color: var(--mu-mint);
+}
+
+.botaoOlho:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.botaoOlho:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}

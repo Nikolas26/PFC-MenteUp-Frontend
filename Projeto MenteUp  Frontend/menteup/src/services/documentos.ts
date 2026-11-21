@@ -110,3 +110,73 @@ export function formatarData(data: string): string {
         year: "numeric",
     });
 }
+
+/// Situação de cada versão na tela do administrador
+export type SituacaoVersao = "AGENDADA" | "VIGENTE" | "ANTERIOR";
+
+/// Uma linha da lista de versões do administrador
+export interface VersaoGestao {
+    versao: string;
+    vigenteDesde: string;
+    resumo: string;
+    situacao: SituacaoVersao;
+    publicadoEm?: string | null;
+    exigeNovoAceite?: boolean;
+}
+
+/// O que o administrador preenche para publicar uma versão nova
+export interface NovaVersao {
+    conteudo: string;
+    resumo: string;
+    vigenteDesde: string;
+    exigeNovoAceite: boolean;
+}
+
+/// Erro da gestão de documentos com o código e os erros de cada campo
+export class ErroDocumento extends Error {
+    codigo: string;
+    campos?: Record<string, string>;
+
+    constructor(mensagem: string, codigo: string, campos?: Record<string, string>) {
+        super(mensagem);
+        this.codigo = codigo;
+        this.campos = campos;
+    }
+}
+
+async function falhaGestao(resposta: Response, mensagemPadrao: string): Promise<ErroDocumento> {
+    const falha = await lerErro(resposta, mensagemPadrao);
+    return new ErroDocumento(falha.mensagem, falha.codigo, falha.campos);
+}
+
+/// Todas as versões, inclusive a que ainda vai entrar em vigor
+export async function listarVersoesGestao(tipo: TipoDocumento): Promise<VersaoGestao[]> {
+    const resposta = await apiFetch(`/documentos/gestao/${tipo}/versoes`);
+    if (!resposta.ok) throw await falhaGestao(resposta, "Não foi possível carregar as versões.");
+    return resposta.json();
+}
+
+/// Texto de qualquer versão, inclusive a agendada
+export async function buscarVersaoGestao(tipo: TipoDocumento, versao: string): Promise<DocumentoVersao> {
+    const resposta = await apiFetch(`/documentos/gestao/${tipo}/versoes/${encodeURIComponent(versao)}`);
+    if (!resposta.ok) throw await falhaGestao(resposta, "Não foi possível abrir esta versão.");
+    return resposta.json();
+}
+
+/// Publica uma versão nova; o número da versão é escolhido pelo sistema
+export async function publicarVersao(tipo: TipoDocumento, dados: NovaVersao): Promise<Partial<VersaoGestao>> {
+    const resposta = await apiFetch(`/documentos/gestao/${tipo}/versoes`, {
+        method: "POST",
+        body: JSON.stringify(dados),
+    });
+    if (!resposta.ok) throw await falhaGestao(resposta, "Não foi possível publicar a versão.");
+    return resposta.json().catch(() => ({}));
+}
+
+/// Cancela a versão que ainda está esperando a data de vigência
+export async function cancelarVersao(tipo: TipoDocumento, versao: string): Promise<void> {
+    const resposta = await apiFetch(`/documentos/gestao/${tipo}/versoes/${encodeURIComponent(versao)}`, {
+        method: "DELETE",
+    });
+    if (!resposta.ok) throw await falhaGestao(resposta, "Não foi possível cancelar a versão.");
+}

@@ -9,6 +9,7 @@ const ACOES: Record<string, string> = {
     EXPORTAR_DADOS: "Consulta ou download dos seus dados",
     EXCLUIR_PROPRIA_CONTA: "Exclusão da própria conta",
     CONSULTAR_LOGS: "Consulta ao histórico do sistema",
+    VISUALIZAR_EMAIL: "E-mail de usuário revelado",
     ALTERACAO_PERMISSAO: "Mudança de permissão",
     ERRO_SISTEMA: "Erro no sistema",
     CRIAR_TURMA: "Turma criada",
