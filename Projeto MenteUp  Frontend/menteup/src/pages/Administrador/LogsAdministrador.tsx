@@ -37,7 +37,17 @@ const ACOES = [
     "FALHA_LOGIN",
     "ERRO_SISTEMA",
     "ALTERACAO_PERMISSAO",
+    "EXCLUIR_PROPRIA_CONTA",
+    "ALTERAR_SENHA",
+    "REDEFINIR_SENHA",
+    "ACEITAR_TERMO",
+    "EXPORTAR_DADOS",
+    "CONSULTAR_LOGS",
+    "VISUALIZAR_EMAIL",
 ] as const;
+
+/// Ações que entram na categoria de segurança
+const ACOES_SEGURANCA = ["FALHA_LOGIN", "ALTERACAO_PERMISSAO", "ALTERAR_SENHA", "REDEFINIR_SENHA", "CONSULTAR_LOGS", "VISUALIZAR_EMAIL"];
 
 const ENTIDADES = [
     "ATIVIDADE",
@@ -80,7 +90,7 @@ interface Categoria {
 
 function categoria(acao: string): Categoria {
     if (acao === "LOGIN") return {rotulo: "Login", icone: <LogIn size={16}/>, cor: styles.corIndigo};
-    if (acao === "FALHA_LOGIN" || acao === "ALTERACAO_PERMISSAO") {
+    if (ACOES_SEGURANCA.includes(acao)) {
         return {rotulo: "Segurança", icone: <ShieldAlert size={16}/>, cor: styles.corCoral};
     }
     if (acao === "ERRO_SISTEMA") return {rotulo: "Sistema", icone: <Settings size={16}/>, cor: styles.corCoral};

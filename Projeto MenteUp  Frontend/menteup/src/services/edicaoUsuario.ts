@@ -2,11 +2,12 @@ import {apiFetch, lerErro} from "./api";
 
 export type TipoUsuario = "ALUNO" | "PROFESSOR" | "ADMINISTRADOR";
 
-/// Dados completos da conta, com o e-mail sem máscara (GET /usuarios/{id})
+/// Dados da conta (GET /usuarios/{id}): o e-mail inteiro só vem para a própria pessoa
 export interface ContaEditavel {
     id: number;
     nomeUsuario: string;
-    usuario: string;
+    usuario?: string;
+    emailMascarado?: string;
     tipoUsuario: TipoUsuario;
 }
 
@@ -27,17 +28,18 @@ export const LIMITE_NOME = 100;
 const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /// Compara e-mails sem diferenciar maiúsculas e espaços
-export function mesmoEmail(a: string, b: string) {
-    return a.trim().toLowerCase() === b.trim().toLowerCase();
+export function mesmoEmail(a?: string, b?: string) {
+    return (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
 }
 
-/// Conferência feita na tela antes de chamar a API
-export function validarEdicao(nome: string, email: string): ErrosEdicao {
+/// Conferência feita na tela antes de chamar a API; o e-mail pode ficar vazio quando é só para trocar
+export function validarEdicao(nome: string, email: string, emailObrigatorio = true): ErrosEdicao {
     const erros: ErrosEdicao = {};
     if (!nome.trim()) erros.nomeUsuario = "Informe o nome.";
     else if (nome.trim().length > LIMITE_NOME) erros.nomeUsuario = `O nome pode ter até ${LIMITE_NOME} caracteres.`;
-    if (!email.trim()) erros.usuario = "Informe o e-mail.";
-    else if (!FORMATO_EMAIL.test(email.trim())) erros.usuario = "E-mail inválido.";
+    if (!email.trim()) {
+        if (emailObrigatorio) erros.usuario = "Informe o e-mail.";
+    } else if (!FORMATO_EMAIL.test(email.trim())) erros.usuario = "E-mail inválido.";
     return erros;
 }
 
@@ -48,8 +50,9 @@ export async function carregarConta(id: number): Promise<ContaEditavel> {
     return resposta.json();
 }
 
-/// PUT /usuarios/atualizar: os quatro campos vão sempre
+/// PUT /usuarios/atualizar: sem e-mail no pedido, o e-mail da conta continua o mesmo
 export async function atualizarConta(conta: ContaEditavel): Promise<ResultadoEdicao> {
+    const email = conta.usuario?.trim();
     let resposta: Response;
     try {
         resposta = await apiFetch("/usuarios/atualizar", {
@@ -57,7 +60,7 @@ export async function atualizarConta(conta: ContaEditavel): Promise<ResultadoEdi
             body: JSON.stringify({
                 id: conta.id,
                 nomeUsuario: conta.nomeUsuario.trim(),
-                usuario: conta.usuario.trim(),
+                ...(email ? {usuario: email} : {}),
                 tipoUsuario: conta.tipoUsuario,
             }),
         });

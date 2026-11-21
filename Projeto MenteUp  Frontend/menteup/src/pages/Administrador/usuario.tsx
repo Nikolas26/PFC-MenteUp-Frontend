@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState, type FormEvent} from "react";
-import {Check, ChevronLeft, ChevronRight, Ellipsis, GraduationCap, Pencil, Search, ShieldCheck, Trash2, User, UserCheck, UserPlus, Users, X} from "lucide-react";
+import {Check, ChevronLeft, ChevronRight, Ellipsis, Eye, EyeOff, GraduationCap, Pencil, Search, ShieldCheck, Trash2, User, UserCheck, UserPlus, Users, X} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import AdminLayout from "../../components/administrador/AdminLayout";
 import {apiFetch, lerErro} from "../../services/api";
@@ -33,7 +33,10 @@ const FILTRO_SOLICITACOES = "SOLICITACOES";
 interface UsuarioApi {
     id: number;
     nomeUsuario: string;
-    usuario: string;
+    /// E-mail com parte escondida, como "el***@gmail.com"; o inteiro só com o botão de revelar
+    emailMascarado?: string;
+    /// Campo antigo, usado só enquanto o servidor não é atualizado
+    usuario?: string;
     tipoUsuario?: string;
     aguardandoPrimeiroAcesso?: boolean;
     statusCadastro?: StatusCadastro | null;
@@ -72,6 +75,61 @@ interface Usuario {
 /// O registro continua na listagem com um e-mail técnico
 function contaExcluida(email: string) {
     return email.endsWith("@menteup.invalid");
+}
+
+/// E-mail que aparece na lista: sempre o mascarado que vem do servidor
+function emailDe(u: { emailMascarado?: string; usuario?: string }) {
+    return u.emailMascarado ?? u.usuario ?? "";
+}
+
+/// E-mail mascarado com o botão de ver o e-mail inteiro só daquela pessoa
+/// O e-mail revelado fica só aqui: ao trocar de página ou recarregar a lista, volta a ficar escondido
+function EmailDaLinha({usuario, onSumiu}: { usuario: Usuario; onSumiu: () => void }) {
+    const [revelado, setRevelado] = useState<string | null>(null);
+    const [buscando, setBuscando] = useState(false);
+    const [erro, setErro] = useState("");
+
+    async function revelar() {
+        setErro("");
+        setBuscando(true);
+        try {
+            const resposta = await apiFetch(`/usuarios/${usuario.id}/email`);
+            if (resposta.status === 404) {
+                onSumiu();
+                return;
+            }
+            if (!resposta.ok) {
+                setErro((await lerErro(resposta, "Não foi possível mostrar o e-mail.")).mensagem);
+                return;
+            }
+            const dados: { email: string } = await resposta.json();
+            setRevelado(dados.email);
+        } catch {
+            setErro("Não foi possível conectar ao servidor.");
+        } finally {
+            setBuscando(false);
+        }
+    }
+
+    return (
+        <span className={styles.emailLinha}>
+            <span>{revelado ?? usuario.email}</span>
+            {!usuario.excluido && usuario.email && (
+                revelado ? (
+                    <button type="button" className={styles.botaoOlho} onClick={() => setRevelado(null)}
+                            title="Esconder e-mail" aria-label={`Esconder o e-mail de ${usuario.nome}`}>
+                        <EyeOff size={15}/>
+                    </button>
+                ) : (
+                    <button type="button" className={styles.botaoOlho} onClick={revelar} disabled={buscando}
+                            title="Ver e-mail completo" aria-label={`Ver o e-mail completo de ${usuario.nome}`}>
+                        <Eye size={15}/>
+                    </button>
+                )
+            )}
+            {erro && <small className={styles.erroCampo} role="alert">{erro}</small>}
+        </span>
+    );
 }
 
 /// Administradores e contas já excluídas não podem ser excluídos
@@ -244,12 +302,13 @@ function EditarUsuario({usuario, propria, onFechar, onSalvo}: {
     const [salvando, setSalvando] = useState(false);
 
     /// A lista pode estar desatualizada, então os dados vêm do GET /usuarios/{id}
+    /// Para outra pessoa o e-mail vem escondido, e o campo fica vazio para digitar um novo, se precisar
     useEffect(() => {
         carregarConta(usuario.id)
             .then((dados) => {
                 setConta(dados);
                 setNome(dados.nomeUsuario);
-                setEmail(dados.usuario);
+                setEmail(dados.usuario ?? "");
                 setTipo(tipoDe(dados.tipoUsuario));
             })
             .catch((e: Error) => setErroCarga(e.message));
@@ -267,7 +326,9 @@ function EditarUsuario({usuario, propria, onFechar, onSalvo}: {
     const contaAdmin = conta !== null && tipoDe(conta.tipoUsuario) === "ADMINISTRADOR";
     const tipoEnviado: Tipo = contaAdmin ? "ADMINISTRADOR" : tipo;
 
-    const emailMudou = conta !== null && !mesmoEmail(email, conta.usuario);
+    /// Só a própria conta chega com o e-mail inteiro para editar
+    const emailCompleto = conta?.usuario !== undefined;
+    const emailMudou = conta !== null && (emailCompleto ? !mesmoEmail(email, conta.usuario) : email.trim() !== "");
     const semMudanca = conta !== null && !emailMudou && nome.trim() === conta.nomeUsuario.trim()
         && tipoEnviado === tipoDe(conta.tipoUsuario);
 
@@ -275,19 +336,24 @@ function EditarUsuario({usuario, propria, onFechar, onSalvo}: {
         evento.preventDefault();
         if (!conta || salvando) return;
 
-        const locais = validarEdicao(nome, email);
+        const locais = validarEdicao(nome, email, emailCompleto);
         setErros(locais);
         if (Object.keys(locais).length > 0) return;
 
         setSalvando(true);
-        const resultado = await atualizarConta({...conta, nomeUsuario: nome, usuario: email, tipoUsuario: tipoEnviado});
+        const resultado = await atualizarConta({
+            ...conta,
+            nomeUsuario: nome,
+            usuario: emailMudou ? email : undefined,
+            tipoUsuario: tipoEnviado,
+        });
         setSalvando(false);
 
         if (!resultado.ok) {
             setErros(resultado.erros);
             return;
         }
-        onSalvo(resultado.conta, !mesmoEmail(resultado.conta.usuario, conta.usuario));
+        onSalvo(resultado.conta, emailMudou);
     }
 
     return (
@@ -316,8 +382,15 @@ function EditarUsuario({usuario, propria, onFechar, onSalvo}: {
                                    }}/>
                             {erros.nomeUsuario && <span className={styles.erroCampo}>{erros.nomeUsuario}</span>}
                         </label>
-                        <label>E-mail
+                        {!emailCompleto && (
+                            <label>E-mail atual
+                                <input className={styles.campo} value={conta.emailMascarado ?? usuario.email}
+                                       readOnly disabled/>
+                            </label>
+                        )}
+                        <label>{emailCompleto ? "E-mail" : "Novo e-mail (opcional)"}
                             <input className={styles.campo} type="email" value={email} autoComplete="off"
+                                   placeholder={emailCompleto ? undefined : "Deixe vazio para manter o atual"}
                                    onChange={(e) => {
                                        setEmail(e.target.value);
                                        setErros({...erros, usuario: undefined});
@@ -521,14 +594,14 @@ function Usuarios() {
                 setUsuarios(lista.map((u) => ({
                     id: u.id,
                     nome: u.nomeUsuario,
-                    email: u.usuario,
+                    email: emailDe(u),
                     tipo: tipoDe(u.tipoUsuario),
                     pendente: u.aguardandoPrimeiroAcesso === true,
                     statusCadastro: u.statusCadastro ?? null,
                     cadastro: u.dataCadastro ?? u.dataCriacao ?? u.criadoEm ?? null,
                     ultimoAcesso: ultimo.get(u.id) ?? null,
                     avatar: u.avatar ?? null,
-                    excluido: contaExcluida(u.usuario),
+                    excluido: contaExcluida(emailDe(u)),
                     turmas: turmas
                         .filter((t) => t.alunos?.some((a) => a.id === u.id) || t.professor?.id === u.id)
                         .map((t) => t.nome),
@@ -594,11 +667,11 @@ function Usuarios() {
 
         if (propria) atualizarUsuarioSalvo({nome: conta.nomeUsuario});
 
-        const linha: Usuario = {...u, nome: conta.nomeUsuario, email: conta.usuario, tipo: tipoDe(conta.tipoUsuario)};
+        const linha: Usuario = {...u, nome: conta.nomeUsuario, email: emailDe(conta) || u.email, tipo: tipoDe(conta.tipoUsuario)};
         setUsuarios((lista) => lista.map((item) => (item.id === u.id ? linha : item)));
         setEditando(null);
         setAviso(emailMudou
-            ? `Dados de "${linha.nome}" atualizados. Como o e-mail mudou, a pessoa foi desconectada e precisa entrar com ${linha.email}.`
+            ? `Dados de "${linha.nome}" atualizados. Como o e-mail mudou, a pessoa foi desconectada e precisa entrar com o novo e-mail.`
             : `Dados de "${linha.nome}" atualizados.`);
     }
 
@@ -705,7 +778,10 @@ function Usuarios() {
                                             </span>
                                         </span>
                                     </td>
-                                    <td className={styles.muted}>{u.email}</td>
+                                    <td className={styles.muted}>
+                                        <EmailDaLinha key={`${u.id}-${versao}`} usuario={u}
+                                                      onSumiu={() => setVersao((atual) => atual + 1)}/>
+                                    </td>
                                     <td>
                                         <BadgeTipo tipo={u.tipo}/> <BadgeStatus status={u.statusCadastro}/>
                                         {u.excluido && <span className={`${styles.badge} ${styles.badgeCoral}`}>Excluído</span>}

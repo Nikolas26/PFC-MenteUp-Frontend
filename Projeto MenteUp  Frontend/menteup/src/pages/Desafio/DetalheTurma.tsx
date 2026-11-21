@@ -186,12 +186,14 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
 
     const idsMatriculados = new Set(turma.alunos.map((aluno) => aluno.id));
     // A turma não traz o e-mail dos alunos (LGPD); professor e administrador o recebem na lista de usuários
-    const emailPorId = new Map(usuarios.map((usuario) => [usuario.id, usuario.usuario]));
+    /// O e-mail chega com parte escondida; o campo antigo fica só enquanto o servidor não é atualizado
+    const emailDe = (usuario: AlunoTurma) => usuario.emailMascarado ?? usuario.usuario;
+    const emailPorId = new Map(usuarios.map((usuario) => [usuario.id, emailDe(usuario)]));
     const termo = buscaAluno.trim().toLowerCase();
     const candidatos = !termo ? [] : usuarios
         .filter((usuario) => usuario.tipoUsuario?.toUpperCase() === "ALUNO" && !idsMatriculados.has(usuario.id))
         .filter((usuario) =>
-            usuario.nomeUsuario.toLowerCase().includes(termo) || (usuario.usuario ?? "").toLowerCase().includes(termo)
+            usuario.nomeUsuario.toLowerCase().includes(termo) || (emailDe(usuario) ?? "").toLowerCase().includes(termo)
         )
         .slice(0, 6);
 
@@ -255,7 +257,7 @@ function DetalheTurma({perfil}: { perfil: PerfilGestao }) {
                                 <li key={aluno.id} className={styles.person}>
                                     <span className={styles.personInfo}>
                                         <strong>{aluno.nomeUsuario}</strong>
-                                        {aluno.usuario && <small>{aluno.usuario}</small>}
+                                        {emailDe(aluno) && <small>{emailDe(aluno)}</small>}
                                     </span>
                                     <button
                                         type="button"

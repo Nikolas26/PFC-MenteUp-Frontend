@@ -1,0 +1,219 @@
+.abas {
+  margin-bottom: 20px;
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 16px;
+  background: var(--mu-app-glass);
+}
+
+.aba {
+  height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--mu-app-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aba:hover {
+  color: var(--mu-app-text);
+}
+
+.abaAtiva {
+  background: var(--mu-indigo);
+  color: #fff;
+}
+
+.abaAtiva:hover {
+  color: #fff;
+}
+
+.aba:focus-visible {
+  outline: 2px solid var(--mu-mint);
+  outline-offset: 2px;
+}
+
+.tituloBloco {
+  margin: 0 0 6px;
+  font-family: var(--mu-font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--mu-app-text);
+}
+
+.espaco {
+  margin-top: 16px;
+}
+
+.iconeTexto {
+  margin-right: 6px;
+  vertical-align: -3px;
+}
+
+.formulario {
+  margin-top: 18px;
+}
+
+.formulario .areaTexto {
+  height: auto;
+  min-height: 420px;
+  padding: 14px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.formulario .areaResumo {
+  height: auto;
+  min-height: 80px;
+  padding: 12px 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.ajuda {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mu-app-muted);
+}
+
+.contador {
+  white-space: nowrap;
+}
+
+.linhaCampos {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.formulario label.marcar {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 26px;
+  cursor: pointer;
+}
+
+.marcar input {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--mu-indigo);
+}
+
+.marcar small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mu-app-muted);
+}
+
+.botoes {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.botoes button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.resumoRevisao {
+  margin: 14px 0 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px 24px;
+}
+
+.resumoRevisao dt {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--mu-app-muted);
+}
+
+.resumoRevisao dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  color: var(--mu-app-text);
+}
+
+.linhaInteira {
+  grid-column: 1 / -1;
+}
+
+.texto {
+  max-height: 60vh;
+  overflow-y: auto;
+  margin: 0 0 16px;
+  padding: 20px 24px;
+  border: 1px solid var(--mu-app-glass-border);
+  border-radius: 14px;
+  background: rgba(var(--mu-veu-rgb), 0.04);
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgba(var(--mu-veu-rgb), 0.88);
+}
+
+.texto h1,
+.texto h2,
+.texto h3 {
+  margin: 22px 0 8px;
+  font-family: var(--mu-font-display);
+  color: var(--mu-app-text);
+}
+
+.texto h1:first-child,
+.texto h2:first-child,
+.texto h3:first-child {
+  margin-top: 0;
+}
+
+.texto p,
+.texto ul,
+.texto ol {
+  margin: 0 0 12px;
+}
+
+.texto a {
+  color: var(--mu-mint);
+}
+
+div.modalLargo {
+  width: min(860px, calc(100vw - 32px));
+  max-width: none;
+}
+
+@media (max-width: 720px) {
+  .linhaCampos {
+    grid-template-columns: 1fr;
+  }
+
+  .formulario label.marcar {
+    padding-top: 0;
+  }
+
+  .botoes {
+    justify-content: stretch;
+  }
+
+  .botoes button {
+    flex: 1;
+  }
+}

@@ -346,7 +346,7 @@ function EditarDados({id, onCancelar, onSalvo}: {
             .then((dados) => {
                 setConta(dados);
                 setNome(dados.nomeUsuario);
-                setEmail(dados.usuario);
+                setEmail(dados.usuario ?? "");
             })
             .catch((e: Error) => setErroCarga(e.message));
     }, [id]);
