@@ -320,6 +320,14 @@ function App() {
                             </PrivateRoute>
                         }
                     />
+                    <Route
+                        path="/professor/ranking"
+                        element={
+                            <PrivateRoute permitido={["PROFESSOR"]}>
+                                <Ranking perfil="PROFESSOR" />
+                            </PrivateRoute>
+                        }
+                    />
 
                     {/* ADMINISTRADOR */}
                     <Route
